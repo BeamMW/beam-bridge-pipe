@@ -1,7 +1,12 @@
 #include "Shaders/common.h"
 #include "Shaders/app_common_impl.h"
-#include "pipe_contract.h"
 #include "Shaders/Ethash.h"
+#include "pipe_contract.h"
+
+namespace Bridge
+{
+#include "pipe_contract_sid.i"
+}
 
 namespace
 {

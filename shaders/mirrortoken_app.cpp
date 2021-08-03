@@ -1,8 +1,13 @@
 #include "Shaders/common.h"
 #include "Shaders/app_common_impl.h"
 #include "Shaders/Eth.h"
-#include "mirrortoken_contract.h"
 #include "pipe_contract.h"
+#include "mirrortoken_contract.h"
+
+namespace MirrorToken
+{
+#include "mirrortoken_contract_sid.i"
+}
 
 // TODO: remove
 namespace Env
