@@ -11,7 +11,7 @@ include(AddShader)
 
 include_directories(beam/bvm)
 
-option(BEAM_SHADER_TESTS_ENABLED "Build shader test" FALSE)
+option(BEAM_SHADER_TESTS_ENABLED "Build shader test" TRUE)
 
 if(NOT BEAM_SHADER_TESTS_ENABLED)
 
