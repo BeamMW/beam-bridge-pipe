@@ -6,10 +6,10 @@
 BEAM_EXPORT void Ctor(const MirrorToken::Create& r)
 {
     MirrorToken::Params params;
-    _POD_(params.m_BridgeID) = r.m_BridgeID;
+    _POD_(params.m_PipeID) = r.m_PipeID;
     _POD_(params.m_Remote).SetZero();
 
-    Env::Halt_if(!Env::RefAdd(r.m_BridgeID));
+    Env::Halt_if(!Env::RefAdd(r.m_PipeID));
 
     params.m_Aid = Env::AssetCreate(&r + 1, r.m_MetadataSize);
     Env::Halt_if(!params.m_Aid);
@@ -22,7 +22,7 @@ BEAM_EXPORT void Dtor(void*)
     MirrorToken::Params params;
     Env::LoadVar_T(MirrorToken::kParamsKey, params);
 
-    Env::Halt_if(!Env::RefRelease(params.m_BridgeID));
+    Env::Halt_if(!Env::RefRelease(params.m_PipeID));
     Env::Halt_if(!Env::AssetDestroy(params.m_Aid));
     Env::DelVar_T(MirrorToken::kParamsKey);
 }
@@ -47,7 +47,7 @@ BEAM_EXPORT void Method_3(const MirrorToken::Send& r)
     Env::Halt_if(_POD_(params.m_Remote).IsZero());
 
 #pragma pack (push, 1)
-    struct Arg :public Bridge::PushLocal
+    struct Arg :public Pipe::PushLocal
     {
         MirrorToken::OutMessage m_Msg;
     };
@@ -58,7 +58,7 @@ BEAM_EXPORT void Method_3(const MirrorToken::Send& r)
     arg.m_MsgSize = sizeof(arg.m_Msg);
     _POD_(arg.m_Msg) = r;
 
-    Env::CallFar_T(params.m_BridgeID, arg);
+    Env::CallFar_T(params.m_PipeID, arg);
 
     Env::FundsLock(params.m_Aid, r.m_Amount);
     Env::AssetEmit(params.m_Aid, r.m_Amount, 0);
@@ -72,7 +72,7 @@ BEAM_EXPORT void Method_4(const MirrorToken::Receive& r)
     Env::Halt_if(_POD_(params.m_Remote).IsZero());
 
 #pragma pack (push, 1)
-    struct Arg : public Bridge::ReadRemote
+    struct Arg : public Pipe::ReadRemote
     {
         MirrorToken::InMessage m_Msg;
     };
@@ -81,7 +81,7 @@ BEAM_EXPORT void Method_4(const MirrorToken::Receive& r)
     Arg arg;
     arg.m_MsgId = r.m_MsgId;
     arg.m_MsgSize = sizeof(arg.m_Msg);
-    Env::CallFar_T(params.m_BridgeID, arg);
+    Env::CallFar_T(params.m_PipeID, arg);
 
     Env::Halt_if(
         (_POD_(arg.m_ContractSender) != params.m_Remote) ||

@@ -18,7 +18,7 @@ struct RlpVisitor
     Utils::Vector<Eth::Rlp::Node> m_Items;
 };
 
-bool FindBridgeLog(const uint8_t* buffer, uint32_t bufferSize, const uint8_t** data, uint32_t& dataSize)
+bool FindPipeLog(const uint8_t* buffer, uint32_t bufferSize, const uint8_t** data, uint32_t& dataSize)
 {
     const uint8_t expectedTopic[] = { 160,17,220,234,188,149,79,103,20,251,148,168,222,215,64,236,190,17,46,241,182,194,35,31,163,69,9,69,158,54,52,85 };
     RlpVisitor v0;
@@ -58,7 +58,7 @@ bool FindBridgeLog(const uint8_t* buffer, uint32_t bufferSize, const uint8_t** d
     return false;
 }
 
-bool CheckBridgeLog(const uint8_t* data, uint32_t dataSize, const Bridge::PushRemote& pushRemote, const uint8_t* msgBody, uint32_t msgBodySize)
+bool CheckPipeLog(const uint8_t* data, uint32_t dataSize, const Pipe::PushRemote& pushRemote, const uint8_t* msgBody, uint32_t msgBodySize)
 {
     if (dataSize <= 160) return false;
 
@@ -111,10 +111,10 @@ BEAM_EXPORT void Dtor(void*)
 {
 }
 
-BEAM_EXPORT void Method_2(const Bridge::PushLocal& value)
+BEAM_EXPORT void Method_2(const Pipe::PushLocal& value)
 {
-    uint32_t size = value.m_MsgSize + sizeof(Bridge::LocalMsgHdr);
-    auto* pMsg = (Bridge::LocalMsgHdr*)Env::StackAlloc(size);
+    uint32_t size = value.m_MsgSize + sizeof(Pipe::LocalMsgHdr);
+    auto* pMsg = (Pipe::LocalMsgHdr*)Env::StackAlloc(size);
 
     if (Env::get_CallDepth() > 1)
         Env::get_CallerCid(1, pMsg->m_ContractSender);
@@ -125,16 +125,16 @@ BEAM_EXPORT void Method_2(const Bridge::PushLocal& value)
     Env::Memcpy(pMsg + 1, &value + 1, value.m_MsgSize);
 
     uint32_t localMsgCounter = 0;
-    Env::LoadVar_T(Bridge::kLocalMsgCounterKey, localMsgCounter);
+    Env::LoadVar_T(Pipe::kLocalMsgCounterKey, localMsgCounter);
 
-    Bridge::LocalMsgHdr::Key msgKey;
+    Pipe::LocalMsgHdr::Key msgKey;
     msgKey.m_MsgId_BE = Utils::FromBE(++localMsgCounter);
     Env::SaveVar(&msgKey, sizeof(msgKey), pMsg, size, KeyTag::Internal);
 
-    Env::SaveVar_T(Bridge::kLocalMsgCounterKey, localMsgCounter);
+    Env::SaveVar_T(Pipe::kLocalMsgCounterKey, localMsgCounter);
 }
 
-BEAM_EXPORT void Method_3(const Bridge::PushRemote& value)
+BEAM_EXPORT void Method_3(const Pipe::PushRemote& value)
 {
     // validate
     const auto& hdr = value.m_Header;
@@ -156,34 +156,34 @@ BEAM_EXPORT void Method_3(const Bridge::PushRemote& value)
     // TODO: add validation of the msgData
     const uint8_t* data = nullptr;
     uint32_t dataSize = 0;
-    Env::Halt_if(!FindBridgeLog(out, size, &data, dataSize));
+    Env::Halt_if(!FindPipeLog(out, size, &data, dataSize));
 
     // save msg
     const uint8_t* msgBody = trieKey + value.m_TrieKeySize;
 
-    Env::Halt_if(!CheckBridgeLog(data, dataSize, value, msgBody, value.m_MsgSize));
+    Env::Halt_if(!CheckPipeLog(data, dataSize, value, msgBody, value.m_MsgSize));
 
-    uint32_t fullMsgSize = value.m_MsgSize + sizeof(Bridge::RemoteMsgHdr);
-    auto* pMsg = (Bridge::RemoteMsgHdr*)Env::StackAlloc(fullMsgSize);
+    uint32_t fullMsgSize = value.m_MsgSize + sizeof(Pipe::RemoteMsgHdr);
+    auto* pMsg = (Pipe::RemoteMsgHdr*)Env::StackAlloc(fullMsgSize);
 
     _POD_(*pMsg) = value.m_MsgHdr;
     Env::Memcpy(pMsg + 1, msgBody, value.m_MsgSize);
 
-    Bridge::RemoteMsgHdr::Key keyMsg;
+    Pipe::RemoteMsgHdr::Key keyMsg;
     keyMsg.m_MsgId_BE = Utils::FromBE(value.m_MsgId);
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), pMsg, fullMsgSize, KeyTag::Internal);
 }
 
-BEAM_EXPORT void Method_4(Bridge::ReadRemote& value)
+BEAM_EXPORT void Method_4(Pipe::ReadRemote& value)
 {
-    Bridge::RemoteMsgHdr::Key keyMsg;
+    Pipe::RemoteMsgHdr::Key keyMsg;
     keyMsg.m_MsgId_BE = Utils::FromBE(value.m_MsgId);
 
     uint32_t size = Env::LoadVar(&keyMsg, sizeof(keyMsg), nullptr, 0, KeyTag::Internal);
-    Env::Halt_if(size < sizeof(Bridge::RemoteMsgHdr));
+    Env::Halt_if(size < sizeof(Pipe::RemoteMsgHdr));
 
-    auto* pMsg = (Bridge::RemoteMsgHdr*)Env::StackAlloc(size);
+    auto* pMsg = (Pipe::RemoteMsgHdr*)Env::StackAlloc(size);
     Env::LoadVar(&keyMsg, sizeof(keyMsg), pMsg, size, KeyTag::Internal);
 
     // check the recipient
@@ -194,7 +194,7 @@ BEAM_EXPORT void Method_4(Bridge::ReadRemote& value)
     // TODO: check
     // Env::DelVar_T(keyMsg);
 
-    size -= sizeof(Bridge::RemoteMsgHdr);
+    size -= sizeof(Pipe::RemoteMsgHdr);
 
     _POD_(value.m_ContractSender) = pMsg->m_ContractSender;
     Env::Memcpy(&value + 1, pMsg + 1, std::min(size, value.m_MsgSize));

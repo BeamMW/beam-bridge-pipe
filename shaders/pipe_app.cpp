@@ -3,7 +3,7 @@
 #include "Shaders/Ethash.h"
 #include "pipe_contract.h"
 
-namespace Bridge
+namespace Pipe
 {
 #include "pipe_contract_sid.i"
 }
@@ -20,22 +20,22 @@ namespace manager
 {
     void Create()
     {
-        Env::GenerateKernel(nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0, "create Bridge contract", 0);
+        Env::GenerateKernel(nullptr, 0, nullptr, 0, nullptr, 0, nullptr, 0, "create Pipe contract", 0);
     }
 
     void View()
     {
-        EnumAndDumpContracts(Bridge::s_SID);
+        EnumAndDumpContracts(Pipe::s_SID);
     }
 
-    void PushRemote(const ContractID& cid, uint32_t msgId, const Bridge::RemoteMsgHdr& msgHdr, const Eth::Header& header, uint32_t datasetCount)
+    void PushRemote(const ContractID& cid, uint32_t msgId, const Pipe::RemoteMsgHdr& msgHdr, const Eth::Header& header, uint32_t datasetCount)
     {
         uint32_t proofSize = Env::DocGetBlob("powProof", nullptr, 0);
         uint32_t receiptProofSize = Env::DocGetBlob("receiptProof", nullptr, 0);
         uint32_t trieKeySize = Env::DocGetBlob("txIndex", nullptr, 0);
         uint32_t msgBodySize = Env::DocGetBlob("msgBody", nullptr, 0);
-        uint32_t fullArgsSize = sizeof(Bridge::PushRemote) + proofSize + receiptProofSize + trieKeySize + msgBodySize;
-        auto* arg = (Bridge::PushRemote*)Env::StackAlloc(fullArgsSize);
+        uint32_t fullArgsSize = sizeof(Pipe::PushRemote) + proofSize + receiptProofSize + trieKeySize + msgBodySize;
+        auto* arg = (Pipe::PushRemote*)Env::StackAlloc(fullArgsSize);
         uint8_t* tmp = (uint8_t*)(arg + 1);
 
         Env::DocGetBlob("powProof", tmp, proofSize);
@@ -55,13 +55,13 @@ namespace manager
         arg->m_ReceiptProofSize = receiptProofSize;
         arg->m_TrieKeySize = trieKeySize;
 
-        Env::GenerateKernel(&cid, arg->s_iMethod, arg, fullArgsSize, nullptr, 0, nullptr, 0, "Bridge::PushRemote", 0);
+        Env::GenerateKernel(&cid, arg->s_iMethod, arg, fullArgsSize, nullptr, 0, nullptr, 0, "Pipe::PushRemote", 0);
     }
 
     void GetLocalMsgCount(const ContractID& cid)
     {
         Env::Key_T<uint8_t> key;
-        key.m_KeyInContract = Bridge::kLocalMsgCounterKey;
+        key.m_KeyInContract = Pipe::kLocalMsgCounterKey;
         key.m_Prefix.m_Cid = cid;
         
         uint32_t localMsgCounter = 0;
@@ -72,7 +72,7 @@ namespace manager
 
     void GetLocalMsg(const ContractID& cid, uint32_t msgId)
     {
-        Env::Key_T<Bridge::LocalMsgHdr::Key> msgKey;
+        Env::Key_T<Pipe::LocalMsgHdr::Key> msgKey;
         msgKey.m_Prefix.m_Cid = cid;
         msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
 
@@ -80,13 +80,13 @@ namespace manager
 
         uint32_t size = 0;
         uint32_t keySize = sizeof(msgKey);
-        Bridge::LocalMsgHdr* pMsg;
+        Pipe::LocalMsgHdr* pMsg;
         if (!reader.MoveNext(nullptr, keySize, pMsg, size, 0))
         {
             OnError("msg with current id is absent");
             return;
         }
-        pMsg = (Bridge::LocalMsgHdr*)Env::StackAlloc(size);
+        pMsg = (Pipe::LocalMsgHdr*)Env::StackAlloc(size);
         if (!reader.MoveNext(nullptr, keySize, pMsg, size, 1))
         {
             OnError("msg with current id is absent");
@@ -100,7 +100,7 @@ namespace manager
 
     void GetLocalMsgProof(const ContractID& cid, uint32_t msgId)
     {
-        Env::Key_T<Bridge::LocalMsgHdr::Key> key;
+        Env::Key_T<Pipe::LocalMsgHdr::Key> key;
         key.m_Prefix.m_Cid = cid;
         key.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
 
@@ -125,7 +125,7 @@ namespace manager
 
     void GetRemoteMsg(const ContractID& cid, uint32_t msgId)
     {
-        Env::Key_T<Bridge::RemoteMsgHdr::Key> msgKey;
+        Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
         msgKey.m_Prefix.m_Cid = cid;
         msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
 
@@ -133,13 +133,13 @@ namespace manager
 
         uint32_t size = 0;
         uint32_t keySize = sizeof(msgKey);
-        Bridge::RemoteMsgHdr* pMsg;
+        Pipe::RemoteMsgHdr* pMsg;
         if (!reader.MoveNext(nullptr, keySize, pMsg, size, 0))
         {
             OnError("msg with current id is absent");
             return;
         }
-        pMsg = (Bridge::RemoteMsgHdr*)Env::StackAlloc(size);
+        pMsg = (Pipe::RemoteMsgHdr*)Env::StackAlloc(size);
         if (!reader.MoveNext(nullptr, keySize, pMsg, size, 1))
         {
             OnError("msg with current id is absent");
@@ -223,7 +223,7 @@ BEAM_EXPORT void Method_1()
             ContractID cid;
             Env::DocGet("cid", cid);
 
-            Bridge::RemoteMsgHdr msgHdr;
+            Pipe::RemoteMsgHdr msgHdr;
             Env::DocGet("contractReceiver", msgHdr.m_ContractReceiver);
             Env::DocGetBlobEx("contractSender", &msgHdr.m_ContractSender, sizeof(msgHdr.m_ContractSender));
             uint32_t msgId = 0;

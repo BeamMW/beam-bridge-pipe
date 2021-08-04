@@ -18,7 +18,7 @@ namespace Env
 }
 
 #define MirrorToken_manager_create(macro) \
-    macro(ContractID, cidBridge)
+    macro(ContractID, cidPipe)
 
 #define MirrorToken_manager_set_remote(macro) \
     macro(ContractID, cid) \
@@ -129,13 +129,13 @@ struct IncomingWalker
 
 #pragma pack (push, 1)
     struct MyMsg
-        :public Bridge::RemoteMsgHdr
+        :public Pipe::RemoteMsgHdr
         ,public MirrorToken::InMessage
     {
     };
 #pragma pack (pop)
 
-    Env::Key_T<Bridge::RemoteMsgHdr::Key> m_Key;
+    Env::Key_T<Pipe::RemoteMsgHdr::Key> m_Key;
     MyMsg m_Msg;
 
 
@@ -147,8 +147,8 @@ struct IncomingWalker
 
         m_Remote = params.m_Remote;
 
-        Env::Key_T<Bridge::RemoteMsgHdr::Key> k1;
-        k1.m_Prefix.m_Cid = params.m_BridgeID;
+        Env::Key_T<Pipe::RemoteMsgHdr::Key> k1;
+        k1.m_Prefix.m_Cid = params.m_PipeID;
         k1.m_KeyInContract.m_MsgId_BE = Utils::FromBE(iStartFrom);
 
         auto k2 = k1;
@@ -214,7 +214,7 @@ ON_METHOD(manager, create)
     }
 
     auto* pArg = (MirrorToken::Create*) Env::StackAlloc(sizeof(MirrorToken::Create) + nMetaSize);
-    pArg->m_BridgeID = cidBridge;
+    pArg->m_PipeID = cidPipe;
 
     Env::DocGetText(szMeta, (char*)(pArg + 1), nMetaSize);
     nMetaSize--;
@@ -252,7 +252,7 @@ ON_METHOD(manager, view_params)
 
     Env::DocAddNum("aid", params.m_Aid);
     Env::DocAddBlob_T("RemoteID", params.m_Remote);
-    Env::DocAddBlob_T("PipeID", params.m_BridgeID);
+    Env::DocAddBlob_T("PipeID", params.m_PipeID);
 }
 
 ON_METHOD(manager, view_incoming)
@@ -339,8 +339,8 @@ ON_METHOD(user, receive)
     if (!params.get(cid))
         return;
 
-    Env::Key_T<Bridge::RemoteMsgHdr::Key> key;
-    key.m_Prefix.m_Cid = params.m_BridgeID;
+    Env::Key_T<Pipe::RemoteMsgHdr::Key> key;
+    key.m_Prefix.m_Cid = params.m_PipeID;
     key.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
 
     IncomingWalker::MyMsg msg;

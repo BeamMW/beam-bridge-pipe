@@ -12,7 +12,7 @@ namespace MirrorToken
     {
         static const uint32_t s_iMethod = 0;
 
-        ContractID m_BridgeID;
+        ContractID m_PipeID;
         uint32_t m_MetadataSize;
         // followed by metadata
     };
@@ -52,7 +52,7 @@ namespace MirrorToken
 
     struct Params
     {
-        ContractID m_BridgeID;
+        ContractID m_PipeID;
         RemoteID m_Remote;
         AssetID m_Aid;
     };

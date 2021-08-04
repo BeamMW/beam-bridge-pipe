@@ -36,19 +36,7 @@ namespace Shaders {
 #include "../shaders/mirrortoken_contract.h"
 
 
-	/*template <bool bToShader> void Convert(DemoXdao::UpdPosFarming& x) {
-		ConvertOrd<bToShader>(x.m_Beam);
-		ConvertOrd<bToShader>(x.m_WithdrawBeamX);
-	}
-	template <bool bToShader> void Convert(DemoXdao::GetPreallocated& x) {
-		ConvertOrd<bToShader>(x.m_Amount);
-	}*/
-
-	/*template <bool bToShader> void Convert(Bridge::PushLocal& ) {		
-	}*/
-
 	template <bool bToShader> void Convert(MirrorToken::Create& x) {
-		//ConvertOrd<bToShader>(x.m_BridgeID);
 		ConvertOrd<bToShader>(x.m_MetadataSize);
 	}
 
@@ -66,7 +54,7 @@ namespace Shaders {
 	}
 
 
-	namespace Bridge {
+	namespace Pipe {
 #include "../shaders/pipe_contract_sid.i"
 #include "../shaders/pipe_contract.cpp"
 	}
@@ -128,8 +116,8 @@ namespace beam {
 					/*TempFrame f(*this, cid);
 					switch (iMethod)
 					{
-					case 0: Shaders::Bridge::Ctor(nullptr); return;
-					case 2: Shaders::Bridge::Method_2(CastArg<Shaders::Bridge::PushLocal>(pArgs)); return;
+					case 0: Shaders::Pipe::Ctor(nullptr); return;
+					case 2: Shaders::Pipe::Method_2(CastArg<Shaders::Pipe::PushLocal>(pArgs)); return;
 					}*/
 				}
 
@@ -210,14 +198,14 @@ namespace beam {
 
 			bvm2::ShaderID sid;
 			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
-			VERIFY_ID(Shaders::Bridge::s_SID, sid);
+			VERIFY_ID(Shaders::Pipe::s_SID, sid);
 		}
 
 		void MyProcessor::TestMirrortoken()
 		{
 			const std::string metadata("testcoin");
 			auto* args = (Shaders::MirrorToken::Create*)malloc(sizeof(Shaders::MirrorToken::Create) + metadata.size());
-			args->m_BridgeID = m_cidPipe;
+			args->m_PipeID = m_cidPipe;
 			args->m_MetadataSize = metadata.size();
 			memcpy((args + 1), metadata.c_str(), metadata.size());
 			verify_test(ContractCreate_T(m_cidMirrortoken, m_Code.m_Mirrortoken, *args));

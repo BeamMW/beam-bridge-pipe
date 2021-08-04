@@ -1,7 +1,7 @@
 #pragma once
 #include "Shaders/Eth.h"
 
-namespace Bridge
+namespace Pipe
 {
     static const uint8_t kLocalMsgCounterKey = 5;
 
