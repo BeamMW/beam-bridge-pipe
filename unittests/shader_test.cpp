@@ -20,8 +20,8 @@
 #include "../beam/bvm/bvm2_impl.h"
 #include <cmath>
 
-namespace Shaders {
-
+namespace Shaders
+{
 #ifdef _MSC_VER
 #	pragma warning (disable : 4200 4702) // unreachable code
 #endif // _MSC_VER
@@ -36,7 +36,8 @@ namespace Shaders {
 #include "../shaders/mirrortoken_contract.h"
 
 
-	template <bool bToShader> void Convert(MirrorToken::Create& x) {
+	template <bool bToShader> void Convert(MirrorToken::Create& x)
+	{
 		ConvertOrd<bToShader>(x.m_MetadataSize);
 	}
 
@@ -53,21 +54,22 @@ namespace Shaders {
 		}
 	}
 
-
-	namespace Pipe {
+	namespace Pipe
+	{
 #include "../shaders/pipe_contract_sid.i"
 #include "../shaders/pipe_contract.cpp"
-	}
+	} // namespace Pipe
 
-	namespace MirrorToken {
+	namespace MirrorToken
+	{
 #include "../shaders/mirrortoken_contract_sid.i"
 #include "../shaders/mirrortoken_contract.cpp"
-	}
+	} // namespace MirrorToken
 
 #ifdef _MSC_VER
 #	pragma warning (default : 4200 4702)
 #endif // _MSC_VER
-}
+} // namespace Shaders
 
 int g_TestsFailed = 0;
 
@@ -91,11 +93,13 @@ using namespace beam::bvm2;
 
 #include "unittest/contract_test_processor.h"
 
-namespace beam {
-	namespace bvm2 {
+namespace beam
+{
+	namespace bvm2 
+	{
 
 		struct MyProcessor
-			:public ContractTestProcessor
+			: public ContractTestProcessor
 		{
 
 			struct Code
