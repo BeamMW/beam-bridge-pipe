@@ -24,11 +24,13 @@ bool FindPipeLog(const uint8_t* buffer, uint32_t bufferSize, const uint8_t** dat
     RlpVisitor v0;
 
     Env::Halt_if(!Eth::Rlp::Decode(buffer, bufferSize, v0));
-    Env::Halt_if(v0.m_Items.m_Count != 1);
-    Env::Halt_if(v0.m_Items.m_p[0].m_Type != Eth::Rlp::Node::Type::List);
+    // one or two elements
+    Env::Halt_if(v0.m_Items.m_Count == 0 || v0.m_Items.m_Count > 2);
+    // last element is receipt
+    Env::Halt_if(v0.m_Items.m_p[v0.m_Items.m_Count - 1].m_Type != Eth::Rlp::Node::Type::List);
 
     RlpVisitor v1;
-    Env::Halt_if(!Eth::Rlp::Decode(v0.m_Items.m_p[0].m_pBuf, (uint32_t)v0.m_Items.m_p[0].m_nLen, v1));
+    Env::Halt_if(!Eth::Rlp::Decode(v0.m_Items.m_p[v0.m_Items.m_Count - 1].m_pBuf, (uint32_t)v0.m_Items.m_p[v0.m_Items.m_Count - 1].m_nLen, v1));
     Env::Halt_if(v1.m_Items.m_Count != 4);
     Env::Halt_if(v1.m_Items.m_p[v1.m_Items.m_Count - 1].m_Type != Eth::Rlp::Node::Type::List);
 
