@@ -33,13 +33,7 @@ namespace Shaders
 #include "Shaders/Eth.h"
 
 #include "../shaders/pipe_contract.h"
-#include "../shaders/mirrortoken_contract.h"
 
-
-	template <bool bToShader> void Convert(MirrorToken::Create& x)
-	{
-		ConvertOrd<bToShader>(x.m_MetadataSize);
-	}
 
 	namespace Env
 	{
@@ -59,12 +53,6 @@ namespace Shaders
 #include "../shaders/pipe_contract_sid.i"
 #include "../shaders/pipe_contract.cpp"
 	} // namespace Pipe
-
-	namespace MirrorToken
-	{
-#include "../shaders/mirrortoken_contract_sid.i"
-#include "../shaders/mirrortoken_contract.cpp"
-	} // namespace MirrorToken
 
 #ifdef _MSC_VER
 #	pragma warning (default : 4200 4702)
@@ -105,12 +93,9 @@ namespace beam
 			struct Code
 			{
 				ByteBuffer m_Pipe;
-				ByteBuffer m_Mirrortoken;
-
 			} m_Code;
 
 			ContractID m_cidPipe;
-			ContractID m_cidMirrortoken;
 
 			void CallFar(const ContractID& cid, uint32_t iMethod, Wasm::Word pArgs, uint8_t bInheritContext) override
 			{
@@ -130,7 +115,6 @@ namespace beam
 
 
 			void TestPipe();
-			void TestMirrortoken();
 
 			void TestAll();
 		};
@@ -150,10 +134,8 @@ namespace beam
 		void MyProcessor::TestAll()
 		{
 			AddCode(m_Code.m_Pipe, "pipe_contract.wasm");
-			AddCode(m_Code.m_Mirrortoken, "mirrortoken_contract.wasm");
 
 			TestPipe();
-			TestMirrortoken();
 		}
 
 		struct CidTxt
@@ -203,22 +185,6 @@ namespace beam
 			bvm2::ShaderID sid;
 			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
 			VERIFY_ID(Shaders::Pipe::s_SID, sid);
-		}
-
-		void MyProcessor::TestMirrortoken()
-		{
-			const std::string metadata("testcoin");
-			auto* args = (Shaders::MirrorToken::Create*)malloc(sizeof(Shaders::MirrorToken::Create) + metadata.size());
-			args->m_PipeID = m_cidPipe;
-			args->m_MetadataSize = metadata.size();
-			memcpy((args + 1), metadata.c_str(), metadata.size());
-			verify_test(ContractCreate_T(m_cidMirrortoken, m_Code.m_Mirrortoken, *args));
-
-			free(args);
-
-			bvm2::ShaderID sid;
-			bvm2::get_ShaderID(sid, m_Code.m_Mirrortoken);
-			VERIFY_ID(Shaders::MirrorToken::s_SID, sid);
 		}
 	} // namespace bvm2
 } // namespace beam
