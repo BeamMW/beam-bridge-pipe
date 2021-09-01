@@ -5,7 +5,7 @@
 #include "Shaders/Eth.h"
 
 // Method_0 - constructor, called once when the contract is deployed
-BEAM_EXPORT void Ctor(const Pipe::Create& )
+BEAM_EXPORT void Ctor(const Pipe::Create&)
 {
 }
 
@@ -14,7 +14,7 @@ BEAM_EXPORT void Dtor(void*)
 {
 }
 
-BEAM_EXPORT void Method_2(const Pipe::SetRemote& )
+BEAM_EXPORT void Method_2(const Pipe::SetRemote&)
 {
 
 }
@@ -44,7 +44,7 @@ BEAM_EXPORT void Method_7(const Pipe::StartDispute&)
 
 }
 
-BEAM_EXPORT void Method_8(const Pipe::NextHeader&)
+BEAM_EXPORT void Method_8(const Pipe::ContinueDispute&)
 {
 
 }
