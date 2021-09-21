@@ -5,8 +5,14 @@
 #include "Shaders/Eth.h"
 
 // Method_0 - constructor, called once when the contract is deployed
-BEAM_EXPORT void Ctor(const Pipe::Create&)
+BEAM_EXPORT void Ctor(const Pipe::Create& args)
 {
+    Pipe::Params params;
+    
+    params.m_Aid = Env::AssetCreate(&args + 1, args.m_MetadataSize);
+    Env::Halt_if(!params.m_Aid);
+
+    Env::SaveVar_T(Pipe::PARAMS_KEY, params);
 }
 
 // Method_1 - destructor, called once when the contract is destroyed
@@ -14,17 +20,22 @@ BEAM_EXPORT void Dtor(void*)
 {
 }
 
-BEAM_EXPORT void Method_2(const Pipe::SetRemote&)
+BEAM_EXPORT void Method_2(const Pipe::SetRemote& args)
+{
+    Pipe::Params params;
+    Env::LoadVar_T(Pipe::PARAMS_KEY, params);
+
+    _POD_(params.m_Remote) = args.m_Remote;
+
+    Env::SaveVar_T(Pipe::PARAMS_KEY, params);
+}
+
+BEAM_EXPORT void Method_3(const Pipe::SendFunds&)
 {
 
 }
 
-BEAM_EXPORT void Method_3(const Pipe::Send&)
-{
-
-}
-
-BEAM_EXPORT void Method_4(const Pipe::Receive&)
+BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds&)
 {
 
 }
@@ -49,7 +60,7 @@ BEAM_EXPORT void Method_8(const Pipe::ContinueDispute&)
 
 }
 
-BEAM_EXPORT void Method_9(const Pipe::Finish&)
+BEAM_EXPORT void Method_9(const Pipe::FinilizeRemoteMsg&)
 {
 
 }

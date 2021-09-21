@@ -4,7 +4,33 @@
 namespace Pipe
 {
 #pragma pack (push, 1) // the following structures will be stored in the node in binary form
+    static const uint8_t PARAMS_KEY = 0;
+
     using RemoteID = Eth::Address;
+
+    struct KeyType
+    {
+        static const uint8_t LocalMsg = 2;
+        static const uint8_t RemoteMsg = 3;
+    };
+
+    struct MsgKeyBase
+    {
+        uint8_t m_Type;
+        // big-endian, for simpler enumeration by app shader
+        uint32_t m_MsgId_BE;
+    };
+
+    struct RemoteMsgHdr
+    {
+        struct Key : public MsgKeyBase
+        {
+            Key() { m_Type = KeyType::RemoteMsg; }
+        };
+
+        ContractID m_ContractReceiver;
+        RemoteID m_ContractSender;
+    };
 
     struct Create
     {
@@ -20,15 +46,15 @@ namespace Pipe
         RemoteID m_Remote;
     };
 
-    struct Send
+    struct SendFunds
     {
         static const uint32_t s_iMethod = 3;
 
-        Eth::Address m_User;
+        RemoteID m_Receiver;
         Amount m_Amount;
     };
 
-    struct Receive
+    struct ReceiveFunds
     {
         static const uint32_t s_iMethod = 4;
 
@@ -40,6 +66,9 @@ namespace Pipe
         static const uint32_t s_iMethod = 5;
 
         uint32_t m_MsgId;
+        RemoteMsgHdr m_RemoteMsg;
+        uint64_t m_Height; // ???
+        uint64_t m_Timestamp; // ???
         uint32_t m_MsgSize;
         // followed by message variable data
     };
@@ -49,6 +78,8 @@ namespace Pipe
         static const uint32_t s_iMethod = 6;
 
         uint32_t m_MsgId;
+        uint64_t m_Height; // ???
+        uint64_t m_Timestamp; // ???
         Amount m_Amount;
     };
 
@@ -77,9 +108,11 @@ namespace Pipe
         uint32_t m_ProofSize;
     };
 
-    struct Finish
+    struct FinilizeRemoteMsg
     {
         static const uint32_t s_iMethod = 9;
+
+        uint32_t m_MsgId;
     };
 
     struct Params
