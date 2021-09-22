@@ -32,7 +32,10 @@ BEAM_EXPORT void Method_2(const Pipe::SetRemote& args)
 
 BEAM_EXPORT void Method_3(const Pipe::SendFunds&)
 {
+    uint32_t localMsgCounter = 0;
+    Env::LoadVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
+    Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds&)

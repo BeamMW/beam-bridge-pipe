@@ -5,6 +5,7 @@ namespace Pipe
 {
 #pragma pack (push, 1) // the following structures will be stored in the node in binary form
     static const uint8_t PARAMS_KEY = 0;
+    static const uint8_t LOCAL_MSG_COUNTER_KEY = 5;
 
     using RemoteID = Eth::Address;
 
@@ -30,6 +31,21 @@ namespace Pipe
 
         ContractID m_ContractReceiver;
         RemoteID m_ContractSender;
+        PubKey m_UserPK;
+        Amount m_Amount;
+    };
+
+    struct LocalMsgHdr
+    {
+        struct Key : public MsgKeyBase
+        {
+            Key() { m_Type = KeyType::LocalMsg; }
+        };
+
+        ContractID m_ContractSender;
+        RemoteID m_ContractReceiver;
+        RemoteID m_Receiver;
+        Amount m_Amount;
     };
 
     struct Create
@@ -69,8 +85,6 @@ namespace Pipe
         RemoteMsgHdr m_RemoteMsg;
         uint64_t m_Height; // ???
         uint64_t m_Timestamp; // ???
-        uint32_t m_MsgSize;
-        // followed by message variable data
     };
 
     struct PayFee
