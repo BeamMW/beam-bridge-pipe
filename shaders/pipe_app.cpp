@@ -213,8 +213,8 @@ namespace manager
 
         Pipe::PushRemote args;        
         Env::DocGetNum32(MSG_ID, &args.m_MsgId);
-        Env::DocGetNum64(HEIGHT, &args.m_Height);
-        Env::DocGetNum64(TIMESTAMP, &args.m_Timestamp);
+        Env::DocGetNum64(HEIGHT, &args.m_RemoteMsg.m_Height);
+        Env::DocGetNum64(TIMESTAMP, &args.m_RemoteMsg.m_Timestamp);
         Env::DocGet(CONTRACT_RECEIVER, args.m_RemoteMsg.m_ContractReceiver);
         Env::DocGetBlobEx(CONTRACT_SENDER, &args.m_RemoteMsg.m_ContractSender, sizeof(args.m_RemoteMsg.m_ContractSender));
         Env::DocGetNum64(AMOUNT, &args.m_RemoteMsg.m_Amount);

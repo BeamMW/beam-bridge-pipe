@@ -33,6 +33,9 @@ namespace Pipe
         RemoteID m_ContractSender;
         PubKey m_UserPK;
         Amount m_Amount;
+        uint64_t m_Height; // ???
+        uint64_t m_Timestamp; // ???
+        bool m_Finalized;
     };
 
     struct LocalMsgHdr
@@ -83,8 +86,8 @@ namespace Pipe
 
         uint32_t m_MsgId;
         RemoteMsgHdr m_RemoteMsg;
-        uint64_t m_Height; // ???
-        uint64_t m_Timestamp; // ???
+        //uint64_t m_Height; // ???
+        //uint64_t m_Timestamp; // ???
     };
 
     struct PayFee
