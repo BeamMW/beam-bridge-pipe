@@ -21,6 +21,8 @@ namespace
     const char* REMOTE_MSG = "remoteMsg"; // ????
     const char* CONTRACT_RECEIVER = "contractReceiver";
     const char* CONTRACT_SENDER = "contractSender";
+    const char* START_FROM = "startFrom";
+    const char* USER_PK = "userPK";
 
     void OnError(const char* sz)
     {
@@ -43,24 +45,15 @@ namespace
         }
     };
 
-   /* struct IncomingWalker
+    struct IncomingWalker
     {
         const ContractID& m_Cid;
         IncomingWalker(const ContractID& cid) :m_Cid(cid) {}
 
         Pipe::RemoteID m_Remote;
         Env::VarReaderEx<true> m_Reader;
-
-#pragma pack (push, 1)
-        struct MyMsg
-            :public Pipe::RemoteMsgHdr
-            , public MirrorToken::InMessage
-        {
-        };
-#pragma pack (pop)
-
         Env::Key_T<Pipe::RemoteMsgHdr::Key> m_Key;
-        MyMsg m_Msg;
+        Pipe::RemoteMsgHdr m_Msg;
 
 
         bool Restart(uint32_t iStartFrom)
@@ -72,7 +65,8 @@ namespace
             m_Remote = params.m_Remote;
 
             Env::Key_T<Pipe::RemoteMsgHdr::Key> k1;
-            k1.m_Prefix.m_Cid = params.m_PipeID;
+            //k1.m_Prefix.m_Cid = params.m_PipeID;
+            k1.m_Prefix.m_Cid = m_Cid; // TODO check this ????
             k1.m_KeyInContract.m_MsgId_BE = Utils::FromBE(iStartFrom);
 
             auto k2 = k1;
@@ -92,7 +86,7 @@ namespace
                 if ((_POD_(m_Msg.m_ContractSender) != m_Remote) || (_POD_(m_Msg.m_ContractReceiver) != m_Cid))
                     continue;
 
-                if (pPk && (_POD_(*pPk) != m_Msg.m_User))
+                if (pPk && (_POD_(*pPk) != m_Msg.m_UserPK))
                     continue;
 
                 return true;
@@ -112,12 +106,12 @@ namespace
         {
             Env::DocGroup gr("");
             Env::DocAddNum("MsgId", Utils::FromBE(wlk.m_Key.m_KeyInContract.m_MsgId_BE));
-            Env::DocAddNum("amount", Utils::FromBE(wlk.m_Msg.m_Amount));
+            Env::DocAddNum("amount", wlk.m_Msg.m_Amount);
 
             if (!pPk)
-                Env::DocAddBlob_T("User", wlk.m_Msg.m_User);
+                Env::DocAddBlob_T("User", wlk.m_Msg.m_UserPK);
         }
-    }*/
+    }
 } // namespace
 
 namespace manager
@@ -218,6 +212,7 @@ namespace manager
         Env::DocGet(CONTRACT_RECEIVER, args.m_RemoteMsg.m_ContractReceiver);
         Env::DocGetBlobEx(CONTRACT_SENDER, &args.m_RemoteMsg.m_ContractSender, sizeof(args.m_RemoteMsg.m_ContractSender));
         Env::DocGetNum64(AMOUNT, &args.m_RemoteMsg.m_Amount);
+        Env::DocGet(USER_PK, args.m_RemoteMsg.m_UserPK);
 
         FundsChange fc;
         fc.m_Aid = 0;
@@ -277,15 +272,17 @@ namespace manager
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Finalize remote message", 0);
     }
 
-    void ViewIncoming()
+    void ViewIncomingMsg()
     {
         ContractID cid;
+        uint32_t startFrom = 0;
         Env::DocGet(CONTRACT_ID, cid);
+        Env::DocGet(START_FROM, startFrom);
 
         PubKey pk;
         Env::DerivePk(pk, &cid, sizeof(cid));
 
-        //ViewIncoming(cid, &pk, iStartFrom);
+        ViewIncoming(cid, &pk, startFrom);
     }
 
     void GetLocalMsgCount()
@@ -333,54 +330,71 @@ BEAM_EXPORT void Method_0()
     }
     {
         Env::DocGroup grMethod("set_remote");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText("remote_addr", "Address");
     }
     {
         Env::DocGroup grMethod("send");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(AMOUNT, "uint64");
+        Env::DocAddText(RECEIVER, "Address");
     }
     {
         Env::DocGroup grMethod("receive");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
     }
     {
         Env::DocGroup grMethod("push_remote");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(HEIGHT, "Height");
+        Env::DocAddText(TIMESTAMP, "uint64");
+        Env::DocAddText(CONTRACT_RECEIVER, "ContractID");
+        Env::DocAddText(CONTRACT_SENDER, "Address");
+        Env::DocAddText(AMOUNT, "uint64");
+        Env::DocAddText(USER_PK, "PubKey");
     }
     {
         Env::DocGroup grMethod("pay_fee");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(HEIGHT, "Height");
+        Env::DocAddText(TIMESTAMP, "uint64");
+        Env::DocAddText(AMOUNT, "uint64");
     }
     {
         Env::DocGroup grMethod("start_dispute");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
         Env::DocGroup grMethod("continue_dispute");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
         Env::DocGroup grMethod("finalize_remote_msg");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
     }
     // local
     {
         Env::DocGroup grMethod("view_incoming");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
         Env::DocGroup grMethod("local_msg_count");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
         Env::DocGroup grMethod("local_msg");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
     }
 
     {
         Env::DocGroup grMethod("local_msg_proof");
-        Env::DocAddText("cid", "ContractID");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
     }
 }
 
@@ -438,7 +452,7 @@ BEAM_EXPORT void Method_1()
     }
     else if (!Env::Strcmp(szAction, "view_incoming"))
     {
-        manager::ViewIncoming();
+        manager::ViewIncomingMsg();
     }
     else if (!Env::Strcmp(szAction, "local_msg_count"))
     {
