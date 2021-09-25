@@ -192,12 +192,31 @@ namespace manager
         Pipe::ReceiveFunds args;
         Env::DocGetNum32(MSG_ID, &args.m_MsgId);
 
+        Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
+        msgKey.m_Prefix.m_Cid = cid;
+        msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
+
+        Env::VarReader reader(msgKey, msgKey);
+
+        uint32_t keySize = sizeof(msgKey);
+        Pipe::RemoteMsgHdr msg;
+        uint32_t size = sizeof(msg);
+        if (!reader.MoveNext(nullptr, keySize, &msg, size, 0))
+        {
+            OnError("msg with current id is absent");
+            return;
+        }
+
         FundsChange fc;
         fc.m_Aid = params.m_Aid;
-        //fc.m_Amount = args.m_Amount;
+        fc.m_Amount = msg.m_Amount;
         fc.m_Consume = 0;
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Receive funds", 0);
+        SigRequest sig;
+        sig.m_pID = &cid;
+        sig.m_nID = sizeof(cid);
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, &sig, 1, "Receive funds", 0);
     }
 
     void PushRemote()
@@ -306,6 +325,26 @@ namespace manager
         uint32_t msgId;
         Env::DocGet(CONTRACT_ID, cid);
         Env::DocGetNum32(MSG_ID, &msgId);
+
+        Env::Key_T<Pipe::LocalMsgHdr::Key> msgKey;
+        msgKey.m_Prefix.m_Cid = cid;
+        msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
+
+        Env::VarReader reader(msgKey, msgKey);
+
+        uint32_t keySize = sizeof(msgKey);
+        Pipe::LocalMsgHdr msg;
+        uint32_t size = sizeof(msg);
+        if (!reader.MoveNext(nullptr, keySize, &msg, size, 0))
+        {
+            OnError("msg with current id is absent");
+            return;
+        }
+
+        Env::DocAddBlob_T("sender contract", msg.m_ContractSender);
+        Env::DocAddBlob_T("receiver contract", msg.m_ContractReceiver);
+        Env::DocAddBlob_T("amount", msg.m_Amount);
+        Env::DocAddBlob_T("receiver", msg.m_Receiver);
     }
 
     void GetLocalMsgProof()
@@ -314,6 +353,28 @@ namespace manager
         uint32_t msgId;
         Env::DocGet(CONTRACT_ID, cid);
         Env::DocGetNum32(MSG_ID, &msgId);
+
+        Env::Key_T<Pipe::LocalMsgHdr::Key> key;
+        key.m_Prefix.m_Cid = cid;
+        key.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
+
+        const uint8_t* msg;
+        uint32_t msgTotalSize;
+        const Merkle::Node* proof;
+
+        uint32_t proofCount = Env::VarGetProof(&key, sizeof(key), (const void**)&msg, &msgTotalSize, &proof);
+
+        if (!proofCount)
+        {
+            OnError("no such a checkpoint");
+            return;
+        }
+
+        Env::DocAddBlob("Msg", msg, msgTotalSize);
+        Env::DocGroup root("Proof");
+        Env::DocAddNum("count", proofCount);
+        Env::DocAddBlob("nodes", proof, sizeof(*proof) * proofCount);
+        Env::DocAddNum64("height", Env::get_Height());
     }
 } // namespace manager
 
