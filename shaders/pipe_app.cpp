@@ -159,6 +159,16 @@ namespace manager
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Set remote ID counter-part", 0);
     }
 
+    void GetPk()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        PubKey pk;
+        Env::DerivePk(pk, &cid, sizeof(cid));
+        Env::DocAddBlob_T("pk", pk);
+    }
+
     void SendFunds()
     {
         ContractID cid;
@@ -235,7 +245,7 @@ namespace manager
 
         FundsChange fc;
         fc.m_Aid = 0;
-        fc.m_Amount = 1000000000000ULL; // lock 10 beam of relayer
+        fc.m_Amount = 1000000000ULL; // lock 10 beam of relayer
         fc.m_Consume = 1;
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Push remote message", 0);
@@ -395,6 +405,10 @@ BEAM_EXPORT void Method_0()
         Env::DocAddText("remote_addr", "Address");
     }
     {
+        Env::DocGroup grMethod("get_pk");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+    }
+    {
         Env::DocGroup grMethod("send");
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(AMOUNT, "uint64");
@@ -482,6 +496,10 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, "set_remote"))
     {
         manager::SetRemote();
+    }
+    else if (!Env::Strcmp(szAction, "get_pk"))
+    {
+        manager::GetPk();
     }
     else if (!Env::Strcmp(szAction, "send"))
     {
