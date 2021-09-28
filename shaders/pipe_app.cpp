@@ -241,7 +241,7 @@ namespace manager
         Env::DocGet(CONTRACT_RECEIVER, args.m_RemoteMsg.m_ContractReceiver);
         Env::DocGetBlobEx(CONTRACT_SENDER, &args.m_RemoteMsg.m_ContractSender, sizeof(args.m_RemoteMsg.m_ContractSender));
         Env::DocGetNum64(AMOUNT, &args.m_RemoteMsg.m_Amount);
-        Env::DocGet(USER_PK, args.m_RemoteMsg.m_UserPK);
+        Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
 
         FundsChange fc;
         fc.m_Aid = 0;
