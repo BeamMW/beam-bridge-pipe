@@ -298,7 +298,12 @@ namespace manager
         Pipe::FinilizeRemoteMsg args;
         Env::DocGetNum32(MSG_ID, &args.m_MsgId);
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Finalize remote message", 0);
+        FundsChange fc;
+        fc.m_Aid = 0;
+        fc.m_Amount = 1000000000ULL; // lock 10 beam of relayer
+        fc.m_Consume = 0;
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Finalize remote message", 0);
     }
 
     void ViewIncomingMsg()

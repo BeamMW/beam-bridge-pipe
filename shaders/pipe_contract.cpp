@@ -120,4 +120,5 @@ BEAM_EXPORT void Method_9(const Pipe::FinilizeRemoteMsg& args)
     msg.m_Finalized = true;
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
+    Env::FundsUnlock(0, 1000000000ULL);
 }
