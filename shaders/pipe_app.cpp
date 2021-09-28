@@ -22,7 +22,6 @@ namespace
     const char* CONTRACT_RECEIVER = "contractReceiver";
     const char* CONTRACT_SENDER = "contractSender";
     const char* START_FROM = "startFrom";
-    const char* USER_PK = "userPK";
 
     void OnError(const char* sz)
     {
@@ -245,7 +244,7 @@ namespace manager
 
         FundsChange fc;
         fc.m_Aid = 0;
-        fc.m_Amount = 1000000000ULL; // lock 10 beam of relayer
+        fc.m_Amount = Pipe::RELAYER_DEPOSIT; // lock 10 beam of relayer
         fc.m_Consume = 1;
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Push remote message", 0);
@@ -300,7 +299,7 @@ namespace manager
 
         FundsChange fc;
         fc.m_Aid = 0;
-        fc.m_Amount = 1000000000ULL; // lock 10 beam of relayer
+        fc.m_Amount = Pipe::RELAYER_DEPOSIT; // lock 10 beam of relayer
         fc.m_Consume = 0;
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Finalize remote message", 0);
@@ -433,7 +432,7 @@ BEAM_EXPORT void Method_0()
         Env::DocAddText(CONTRACT_RECEIVER, "ContractID");
         Env::DocAddText(CONTRACT_SENDER, "Address");
         Env::DocAddText(AMOUNT, "uint64");
-        Env::DocAddText(USER_PK, "PubKey");
+        Env::DocAddText(RECEIVER, "PubKey");
     }
     {
         Env::DocGroup grMethod("pay_fee");

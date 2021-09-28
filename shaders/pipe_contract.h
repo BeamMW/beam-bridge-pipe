@@ -7,6 +7,8 @@ namespace Pipe
     static const uint8_t PARAMS_KEY = 0;
     static const uint8_t LOCAL_MSG_COUNTER_KEY = 5;
 
+    static const Amount RELAYER_DEPOSIT = 1000000000ULL; // 10 beam
+
     using RemoteID = Eth::Address;
 
     struct KeyType

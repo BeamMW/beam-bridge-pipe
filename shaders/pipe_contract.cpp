@@ -90,7 +90,7 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     msg.m_Finalized = false;
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-    Env::FundsLock(0, 1000000000ULL);
+    Env::FundsLock(0, Pipe::RELAYER_DEPOSIT);
 }
 
 BEAM_EXPORT void Method_6(const Pipe::PayFee&)
@@ -120,5 +120,5 @@ BEAM_EXPORT void Method_9(const Pipe::FinilizeRemoteMsg& args)
     msg.m_Finalized = true;
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-    Env::FundsUnlock(0, 1000000000ULL);
+    Env::FundsUnlock(0, Pipe::RELAYER_DEPOSIT);
 }
