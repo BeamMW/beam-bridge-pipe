@@ -355,10 +355,10 @@ namespace manager
             return;
         }
 
-        Env::DocAddBlob_T("sender contract", msg.m_ContractSender);
-        Env::DocAddBlob_T("receiver contract", msg.m_ContractReceiver);
-        Env::DocAddBlob_T("amount", msg.m_Amount);
-        Env::DocAddBlob_T("receiver", msg.m_Receiver);
+        Env::DocAddBlob_T(CONTRACT_SENDER, msg.m_ContractSender);
+        Env::DocAddBlob_T(CONTRACT_RECEIVER, msg.m_ContractReceiver);
+        Env::DocAddBlob_T(AMOUNT, msg.m_Amount);
+        Env::DocAddBlob_T(RECEIVER, msg.m_Receiver);
     }
 
     void GetLocalMsgProof()
@@ -406,7 +406,7 @@ BEAM_EXPORT void Method_0()
     {
         Env::DocGroup grMethod("set_remote");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText("remote_addr", "Address");
+        Env::DocAddText(ADDRESS_REMOTE, "Address");
     }
     {
         Env::DocGroup grMethod("get_pk");
