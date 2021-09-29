@@ -50,6 +50,8 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Env::SaveVar(&msgKey, sizeof(msgKey), &msg, sizeof(msg), KeyTag::Internal);
 
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
+
+    Env::FundsLock(params.m_Aid, msg.m_Amount);
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
