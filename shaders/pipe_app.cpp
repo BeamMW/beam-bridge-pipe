@@ -357,7 +357,7 @@ namespace manager
 
         Env::DocAddBlob_T(CONTRACT_SENDER, msg.m_ContractSender);
         Env::DocAddBlob_T(CONTRACT_RECEIVER, msg.m_ContractReceiver);
-        Env::DocAddBlob_T(AMOUNT, msg.m_Amount);
+        Env::DocAddNum(AMOUNT, msg.m_Amount);
         Env::DocAddBlob_T(RECEIVER, msg.m_Receiver);
     }
 
