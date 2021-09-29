@@ -34,6 +34,10 @@ namespace Shaders
 
 #include "../shaders/pipe_contract.h"
 
+	template <bool bToShader> void Convert(Pipe::Create& x)
+	{
+		ConvertOrd<bToShader>(x.m_MetadataSize);
+	}
 
 	namespace Env
 	{
@@ -100,15 +104,15 @@ namespace beam
 			void CallFar(const ContractID& cid, uint32_t iMethod, Wasm::Word pArgs, uint8_t bInheritContext) override
 			{
 
-				if (cid == m_cidPipe)
-				{
-					/*TempFrame f(*this, cid);
-					switch (iMethod)
-					{
-					case 0: Shaders::Pipe::Ctor(nullptr); return;
-					case 2: Shaders::Pipe::Method_2(CastArg<Shaders::Pipe::PushLocal>(pArgs)); return;
-					}*/
-				}
+				//if (cid == m_cidPipe)
+				//{
+				//	TempFrame f(*this, cid);
+				//	switch (iMethod)
+				//	{
+				//	case 0: Shaders::Pipe::Ctor(CastArg<Shaders::Pipe::Create>(pArgs)); return;
+				//	//case 2: Shaders::Pipe::Method_2(CastArg<Shaders::Pipe::PushLocal>(pArgs)); return;
+				//	}
+				//}
 
 				ProcessorContract::CallFar(cid, iMethod, pArgs, bInheritContext);
 			}
@@ -179,8 +183,21 @@ namespace beam
 
 		void MyProcessor::TestPipe()
 		{
-			Zero_ zero;
-			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, zero));
+			const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
+			const uint32_t metadataSize = sizeof(metadata);
+
+#pragma pack (push, 1)
+			struct Arg : public Shaders::Pipe::Create
+			{
+				char metadata[metadataSize];
+			};
+			Arg args;
+#pragma pack (pop)
+
+			memcpy(args.metadata, metadata, metadataSize);
+			args.m_MetadataSize = metadataSize;
+			
+			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, args));
 
 			bvm2::ShaderID sid;
 			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
