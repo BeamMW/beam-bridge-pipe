@@ -22,6 +22,7 @@ namespace
     const char* CONTRACT_RECEIVER = "contractReceiver";
     const char* CONTRACT_SENDER = "contractSender";
     const char* START_FROM = "startFrom";
+    const char* FINALIZED = "finalized";
 
     void OnError(const char* sz)
     {
@@ -390,6 +391,37 @@ namespace manager
         Env::DocAddBlob("nodes", proof, sizeof(*proof) * proofCount);
         Env::DocAddNum64("height", Env::get_Height());
     }
+
+    void GetRemoteMsg()
+    {
+        ContractID cid;
+        uint32_t msgId;
+        Env::DocGet(CONTRACT_ID, cid);
+        Env::DocGetNum32(MSG_ID, &msgId);
+
+        Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
+        msgKey.m_Prefix.m_Cid = cid;
+        msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(msgId);
+
+        Env::VarReader reader(msgKey, msgKey);
+
+        uint32_t keySize = sizeof(msgKey);
+        Pipe::RemoteMsgHdr msg;
+        uint32_t size = sizeof(msg);
+        if (!reader.MoveNext(nullptr, keySize, &msg, size, 0))
+        {
+            OnError("msg with current id is absent");
+            return;
+        }
+
+        Env::DocAddBlob_T(CONTRACT_SENDER, msg.m_ContractSender);
+        Env::DocAddBlob_T(CONTRACT_RECEIVER, msg.m_ContractReceiver);
+        Env::DocAddNum(AMOUNT, msg.m_Amount);
+        Env::DocAddBlob_T(RECEIVER, msg.m_UserPK);
+        Env::DocAddNum(HEIGHT, msg.m_Height);
+        Env::DocAddNum(TIMESTAMP, msg.m_Timestamp);
+        Env::DocAddNum(FINALIZED, static_cast<uint32_t>(msg.m_Finalized));
+    }
 } // namespace manager
 
 BEAM_EXPORT void Method_0()
@@ -469,9 +501,13 @@ BEAM_EXPORT void Method_0()
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint32");
     }
-
     {
         Env::DocGroup grMethod("local_msg_proof");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
+    }
+    {
+        Env::DocGroup grMethod("remote_msg");
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint32");
     }
@@ -548,6 +584,10 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, "local_msg_proof"))
     {
         manager::GetLocalMsgProof();
+    }
+    else if (!Env::Strcmp(szAction, "remote_msg"))
+    {
+        manager::GetRemoteMsg();
     }
     else
     {
