@@ -43,6 +43,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
 
     Pipe::LocalMsgHdr msg;
     msg.m_Amount = args.m_Amount;
+    msg.m_RelayerFee = args.m_RelayerFee;
     _POD_(msg.m_Receiver) = args.m_Receiver;
     _POD_(msg.m_ContractReceiver) = params.m_Remote;
     
@@ -51,7 +52,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
 
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
-    Env::FundsLock(params.m_Aid, msg.m_Amount);
+    Env::FundsLock(params.m_Aid, (msg.m_Amount + msg.m_RelayerFee));
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
@@ -95,17 +96,17 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     Env::FundsLock(0, Pipe::RELAYER_DEPOSIT);
 }
 
-BEAM_EXPORT void Method_6(const Pipe::PayFee&)
+BEAM_EXPORT void Method_6(const Pipe::StartDispute&)
 {
 
 }
 
-BEAM_EXPORT void Method_7(const Pipe::StartDispute&)
+BEAM_EXPORT void Method_7(const Pipe::ContinueDispute&)
 {
 
 }
 
-BEAM_EXPORT void Method_8(const Pipe::ContinueDispute&)
+BEAM_EXPORT void Method_8(const Pipe::FinalizeDispute&)
 {
 
 }
@@ -123,4 +124,12 @@ BEAM_EXPORT void Method_9(const Pipe::FinilizeRemoteMsg& args)
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
     Env::FundsUnlock(0, Pipe::RELAYER_DEPOSIT);
+
+    Pipe::Params params;
+    Env::LoadVar_T(Pipe::PARAMS_KEY, params);
+
+    // mint asset
+    Env::AssetEmit(params.m_Aid, msg.m_RelayerFee, 1);
+
+    Env::FundsUnlock(params.m_Aid, msg.m_RelayerFee);
 }

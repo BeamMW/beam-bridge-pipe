@@ -14,6 +14,7 @@ namespace
     const char* CONTRACT_ID = "cid";
     const char* ADDRESS_REMOTE = "addressRemote";
     const char* AMOUNT = "amount";
+    const char* RELAYER_FEE = "relayerFee";
     const char* RECEIVER = "receiver";
     const char* MSG_ID = "msgId";
     const char* HEIGHT = "height";
@@ -23,6 +24,9 @@ namespace
     const char* CONTRACT_SENDER = "contractSender";
     const char* START_FROM = "startFrom";
     const char* FINALIZED = "finalized";
+    const char* RELAYER = "relayer";
+
+    const Amount SHADER_PRICE = 300000000000ULL;
 
     void OnError(const char* sz)
     {
@@ -134,7 +138,7 @@ namespace manager
 
         FundsChange fc;
         fc.m_Aid = 0; // asset id
-        fc.m_Amount = 300000000000ULL; // amount of the input or output
+        fc.m_Amount = SHADER_PRICE; // amount of the input or output
         fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
 
         Env::GenerateKernel(nullptr, args->s_iMethod, args, sizeof(*args) + metaSize, &fc, 1, nullptr, 0, "create Pipe contract", 0);
@@ -180,6 +184,7 @@ namespace manager
         
         Pipe::SendFunds args;
         Env::DocGetNum64(AMOUNT, &args.m_Amount);
+        Env::DocGetNum64(RELAYER_FEE, &args.m_RelayerFee);
         Env::DocGetBlobEx(RECEIVER, &args.m_Receiver, sizeof(args.m_Receiver));
 
         FundsChange fc;
@@ -241,7 +246,9 @@ namespace manager
         Env::DocGet(CONTRACT_RECEIVER, args.m_RemoteMsg.m_ContractReceiver);
         Env::DocGetBlobEx(CONTRACT_SENDER, &args.m_RemoteMsg.m_ContractSender, sizeof(args.m_RemoteMsg.m_ContractSender));
         Env::DocGetNum64(AMOUNT, &args.m_RemoteMsg.m_Amount);
+        Env::DocGetNum64(RELAYER_FEE, &args.m_RemoteMsg.m_RelayerFee);
         Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
+        Env::DocGet(RELAYER, args.m_RemoteMsg.m_Relayer);
 
         FundsChange fc;
         fc.m_Aid = 0;
@@ -249,25 +256,6 @@ namespace manager
         fc.m_Consume = 1;
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Push remote message", 0);
-    }
-
-    void PayFee()
-    {
-        ContractID cid;
-        Env::DocGet(CONTRACT_ID, cid);
-
-        Pipe::PayFee args;
-        Env::DocGetNum64(AMOUNT, &args.m_Amount);
-        Env::DocGetNum32(MSG_ID, &args.m_MsgId);
-        Env::DocGetNum64(HEIGHT, &args.m_Height);
-        Env::DocGetNum64(TIMESTAMP, &args.m_Timestamp);
-
-        FundsChange fc;
-        fc.m_Aid = 0;
-        fc.m_Amount = args.m_Amount;
-        fc.m_Consume = 1;
-
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Pay fee to relayer", 0);
     }
 
     void StartDispute()
@@ -290,6 +278,16 @@ namespace manager
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Continue dispute", 0);
     }
 
+    void FinalizeDispute()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        Pipe::FinalizeDispute args;
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Finalize dispute", 0);
+    }
+
     void FinalizeRemoteMsg()
     {
         ContractID cid;
@@ -298,12 +296,35 @@ namespace manager
         Pipe::FinilizeRemoteMsg args;
         Env::DocGetNum32(MSG_ID, &args.m_MsgId);
 
-        FundsChange fc;
-        fc.m_Aid = 0;
-        fc.m_Amount = Pipe::RELAYER_DEPOSIT; // lock 10 beam of relayer
-        fc.m_Consume = 0;
+        Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
+        msgKey.m_Prefix.m_Cid = cid;
+        msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Finalize remote message", 0);
+        Env::VarReader reader(msgKey, msgKey);
+
+        uint32_t keySize = sizeof(msgKey);
+        Pipe::RemoteMsgHdr msg;
+        uint32_t size = sizeof(msg);
+        if (!reader.MoveNext(nullptr, keySize, &msg, size, 0))
+        {
+            OnError("msg with current id is absent");
+            return;
+        }
+
+        FundsChange fc[2];
+        fc[0].m_Aid = 0;
+        fc[0].m_Amount = Pipe::RELAYER_DEPOSIT; // lock 10 beam of relayer
+        fc[0].m_Consume = 0;
+
+        ParamsPlus params;
+        if (!params.get(cid))
+            return;
+
+        fc[1].m_Aid = params.m_Aid;
+        fc[1].m_Amount = msg.m_RelayerFee; // lock 10 beam of relayer
+        fc[1].m_Consume = 0;
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc[0], 2, nullptr, 0, "Finalize remote message", 0);
     }
 
     void ViewIncomingMsg()
@@ -359,6 +380,7 @@ namespace manager
         Env::DocAddBlob_T(CONTRACT_SENDER, msg.m_ContractSender);
         Env::DocAddBlob_T(CONTRACT_RECEIVER, msg.m_ContractReceiver);
         Env::DocAddNum(AMOUNT, msg.m_Amount);
+        Env::DocAddNum(RELAYER_FEE, msg.m_RelayerFee);
         Env::DocAddBlob_T(RECEIVER, msg.m_Receiver);
     }
 
@@ -417,7 +439,9 @@ namespace manager
         Env::DocAddBlob_T(CONTRACT_SENDER, msg.m_ContractSender);
         Env::DocAddBlob_T(CONTRACT_RECEIVER, msg.m_ContractReceiver);
         Env::DocAddNum(AMOUNT, msg.m_Amount);
+        Env::DocAddNum(RELAYER_FEE, msg.m_RelayerFee);
         Env::DocAddBlob_T(RECEIVER, msg.m_UserPK);
+        Env::DocAddBlob_T(RELAYER, msg.m_Relayer);
         Env::DocAddNum(HEIGHT, msg.m_Height);
         Env::DocAddNum(TIMESTAMP, msg.m_Timestamp);
         Env::DocAddNum(FINALIZED, static_cast<uint32_t>(msg.m_Finalized));
@@ -448,6 +472,7 @@ BEAM_EXPORT void Method_0()
         Env::DocGroup grMethod("send");
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(AMOUNT, "uint64");
+        Env::DocAddText(RELAYER_FEE, "uint64");
         Env::DocAddText(RECEIVER, "Address");
     }
     {
@@ -464,15 +489,9 @@ BEAM_EXPORT void Method_0()
         Env::DocAddText(CONTRACT_RECEIVER, "ContractID");
         Env::DocAddText(CONTRACT_SENDER, "Address");
         Env::DocAddText(AMOUNT, "uint64");
+        Env::DocAddText(RELAYER_FEE, "uint64");
         Env::DocAddText(RECEIVER, "PubKey");
-    }
-    {
-        Env::DocGroup grMethod("pay_fee");
-        Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(MSG_ID, "uint32");
-        Env::DocAddText(HEIGHT, "Height");
-        Env::DocAddText(TIMESTAMP, "uint64");
-        Env::DocAddText(AMOUNT, "uint64");
+        Env::DocAddText(RELAYER, "PubKey");
     }
     {
         Env::DocGroup grMethod("start_dispute");
@@ -481,6 +500,11 @@ BEAM_EXPORT void Method_0()
     {
         Env::DocGroup grMethod("continue_dispute");
         Env::DocAddText(CONTRACT_ID, "ContractID");
+    }
+    {
+        Env::DocGroup grMethod("finalize_dispute");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MSG_ID, "uint32");
     }
     {
         Env::DocGroup grMethod("finalize_remote_msg");
@@ -553,10 +577,6 @@ BEAM_EXPORT void Method_1()
     {
         manager::PushRemote();
     }
-    else if (!Env::Strcmp(szAction, "pay_fee"))
-    {
-        manager::PayFee();
-    }
     else if (!Env::Strcmp(szAction, "start_dispute"))
     {
         manager::StartDispute();
@@ -564,6 +584,10 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, "continue_dispute"))
     {
         manager::ContinueDispute();
+    }
+    else if (!Env::Strcmp(szAction, "finalize_dispute"))
+    {
+        manager::FinalizeDispute();
     }
     else if (!Env::Strcmp(szAction, "finalize_remote_msg"))
     {

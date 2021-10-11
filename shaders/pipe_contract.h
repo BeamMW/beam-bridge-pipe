@@ -35,8 +35,10 @@ namespace Pipe
         RemoteID m_ContractSender;
         PubKey m_UserPK;
         Amount m_Amount;
+        Amount m_RelayerFee;
         uint64_t m_Height; // ???
         uint64_t m_Timestamp; // ???
+        PubKey m_Relayer;
         bool m_Finalized;
     };
 
@@ -51,6 +53,7 @@ namespace Pipe
         RemoteID m_ContractReceiver;
         RemoteID m_Receiver;
         Amount m_Amount;
+        Amount m_RelayerFee;
     };
 
     struct Create
@@ -73,6 +76,7 @@ namespace Pipe
 
         RemoteID m_Receiver;
         Amount m_Amount;
+        Amount m_RelayerFee;
     };
 
     struct ReceiveFunds
@@ -92,19 +96,9 @@ namespace Pipe
         //uint64_t m_Timestamp; // ???
     };
 
-    struct PayFee
-    {
-        static const uint32_t s_iMethod = 6;
-
-        uint32_t m_MsgId;
-        uint64_t m_Height; // ???
-        uint64_t m_Timestamp; // ???
-        Amount m_Amount;
-    };
-
     struct StartDispute
     {
-        static const uint32_t s_iMethod = 7;
+        static const uint32_t s_iMethod = 6;
 
         uint32_t m_MsgId;
         //RemoteMsgHdr m_MsgHdr;
@@ -119,12 +113,19 @@ namespace Pipe
 
     struct ContinueDispute
     {
-        static const uint32_t s_iMethod = 8;
+        static const uint32_t s_iMethod = 7;
 
         uint32_t m_MsgId;
         Eth::Header m_Header;
         uint32_t m_DatasetCount;
         uint32_t m_ProofSize;
+    };
+
+    struct FinalizeDispute
+    {
+        static const uint32_t s_iMethod = 8;
+
+        uint32_t m_MsgId;
     };
 
     struct FinilizeRemoteMsg
