@@ -44,6 +44,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Pipe::LocalMsgHdr msg;
     msg.m_Amount = args.m_Amount;
     msg.m_RelayerFee = args.m_RelayerFee;
+    msg.m_Height = Env::get_Height();
     _POD_(msg.m_Receiver) = args.m_Receiver;
     _POD_(msg.m_ContractReceiver) = params.m_Remote;
     

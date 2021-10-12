@@ -39,7 +39,10 @@ namespace Pipe
         uint64_t m_Height; // ???
         uint64_t m_Timestamp; // ???
         PubKey m_Relayer;
+        // height of block in beam chain
+        uint64_t m_Height2; // TODO roman.strilets need best name
         bool m_Finalized;
+        bool m_DisputeInProgress; // TODO roman.strilets need best name
     };
 
     struct LocalMsgHdr
@@ -53,6 +56,7 @@ namespace Pipe
         RemoteID m_ContractReceiver;
         RemoteID m_Receiver;
         Amount m_Amount;
+        uint64_t m_Height;
         Amount m_RelayerFee;
     };
 
@@ -92,8 +96,6 @@ namespace Pipe
 
         uint32_t m_MsgId;
         RemoteMsgHdr m_RemoteMsg;
-        //uint64_t m_Height; // ???
-        //uint64_t m_Timestamp; // ???
     };
 
     struct StartDispute
@@ -101,7 +103,6 @@ namespace Pipe
         static const uint32_t s_iMethod = 6;
 
         uint32_t m_MsgId;
-        //RemoteMsgHdr m_MsgHdr;
         Eth::Header m_Header;
         uint32_t m_DatasetCount;
         uint32_t m_ProofSize;
@@ -119,6 +120,7 @@ namespace Pipe
         Eth::Header m_Header;
         uint32_t m_DatasetCount;
         uint32_t m_ProofSize;
+        // followed by message variable data
     };
 
     struct FinalizeDispute
