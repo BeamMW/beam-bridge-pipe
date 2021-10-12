@@ -44,11 +44,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Pipe::LocalMsgHdr msg;
     msg.m_Amount = args.m_Amount;
     msg.m_RelayerFee = args.m_RelayerFee;
-    msg.m_Height = Env::get_Height();
-    _POD_(msg.m_Receiver) = args.m_Receiver;
-    _POD_(msg.m_ContractReceiver) = params.m_Remote;
-    
-    Env::get_CallerCid(0, msg.m_ContractSender);
+
     Env::SaveVar(&msgKey, sizeof(msgKey), &msg, sizeof(msg), KeyTag::Internal);
 
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
@@ -63,8 +59,6 @@ BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
 
     Pipe::RemoteMsgHdr msg;
     Env::LoadVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-
-    Env::Halt_if(!msg.m_Finalized);
 
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
@@ -82,55 +76,11 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
-    Env::Halt_if(_POD_(args.m_RemoteMsg.m_ContractSender) != params.m_Remote);
-    // TODO maybe need check receiver contract address???
-
     Pipe::RemoteMsgHdr::Key keyMsg;
     keyMsg.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
 
     Pipe::RemoteMsgHdr msg;
     _POD_(msg) = args.m_RemoteMsg;
 
-    msg.m_Finalized = false;
-
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-    Env::FundsLock(0, Pipe::RELAYER_DEPOSIT);
-}
-
-BEAM_EXPORT void Method_6(const Pipe::StartDispute&)
-{
-
-}
-
-BEAM_EXPORT void Method_7(const Pipe::ContinueDispute&)
-{
-
-}
-
-BEAM_EXPORT void Method_8(const Pipe::FinalizeDispute&)
-{
-
-}
-
-BEAM_EXPORT void Method_9(const Pipe::FinilizeRemoteMsg& args)
-{
-    // TODO unlock locked funds in PushRemote
-    Pipe::RemoteMsgHdr::Key keyMsg;
-    keyMsg.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
-
-    Pipe::RemoteMsgHdr msg;
-    Env::LoadVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-
-    msg.m_Finalized = true;
-
-    Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
-    Env::FundsUnlock(0, Pipe::RELAYER_DEPOSIT);
-
-    Pipe::Params params;
-    Env::LoadVar_T(Pipe::PARAMS_KEY, params);
-
-    // mint asset
-    Env::AssetEmit(params.m_Aid, msg.m_RelayerFee, 1);
-
-    Env::FundsUnlock(params.m_Aid, msg.m_RelayerFee);
 }
