@@ -235,7 +235,20 @@ namespace manager
         Env::DocGetNum64(RELAYER_FEE, &args.m_RemoteMsg.m_RelayerFee);
         Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Push remote message", 0);
+        ParamsPlus params;
+        if (!params.get(cid))
+            return;
+
+        FundsChange fc;
+        fc.m_Aid = params.m_Aid;
+        fc.m_Amount = args.m_RemoteMsg.m_RelayerFee;
+        fc.m_Consume = 0;
+
+        SigRequest sig;
+        sig.m_pID = &cid;
+        sig.m_nID = sizeof(cid);
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, &sig, 1, "Push remote message", 0);
     }
 
     void ViewIncomingMsg()

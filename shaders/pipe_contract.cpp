@@ -83,4 +83,9 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     _POD_(msg) = args.m_RemoteMsg;
 
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
+
+    // mint asset
+    Env::AssetEmit(params.m_Aid, msg.m_RelayerFee, 1);
+    Env::FundsUnlock(params.m_Aid, msg.m_RelayerFee);
+    Env::AddSig(params.m_Relayer);
 }
