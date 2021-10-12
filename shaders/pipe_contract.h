@@ -53,11 +53,11 @@ namespace Pipe
         uint32_t m_MetadataSize;
     };
 
-    struct SetRemote
+    struct SetRelayer
     {
         static const uint32_t s_iMethod = 2;
 
-        RemoteID m_Remote;
+        PubKey m_Relayer;
     };
 
     struct SendFunds
@@ -86,7 +86,7 @@ namespace Pipe
 
     struct Params
     {
-        RemoteID m_Remote;
+        PubKey m_Relayer;
         AssetID m_Aid;
     };
 #pragma pack (pop)

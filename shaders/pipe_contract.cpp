@@ -20,12 +20,12 @@ BEAM_EXPORT void Dtor(void*)
 {
 }
 
-BEAM_EXPORT void Method_2(const Pipe::SetRemote& args)
+BEAM_EXPORT void Method_2(const Pipe::SetRelayer& args)
 {
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
-    _POD_(params.m_Remote) = args.m_Remote;
+    _POD_(params.m_Relayer) = args.m_Relayer;
 
     Env::SaveVar_T(Pipe::PARAMS_KEY, params);
 }

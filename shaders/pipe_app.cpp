@@ -12,18 +12,11 @@ namespace
 {
     const char* METADATA = "metadata";
     const char* CONTRACT_ID = "cid";
-    const char* ADDRESS_REMOTE = "addressRemote";
     const char* AMOUNT = "amount";
     const char* RELAYER_FEE = "relayerFee";
     const char* RECEIVER = "receiver";
     const char* MSG_ID = "msgId";
-    const char* HEIGHT = "height";
-    const char* TIMESTAMP = "timestamp";
-    const char* REMOTE_MSG = "remoteMsg"; // ????
-    const char* CONTRACT_RECEIVER = "contractReceiver";
-    const char* CONTRACT_SENDER = "contractSender";
     const char* START_FROM = "startFrom";
-    const char* FINALIZED = "finalized";
     const char* RELAYER = "relayer";
 
     const Amount SHADER_PRICE = 300000000000ULL;
@@ -54,7 +47,7 @@ namespace
         const ContractID& m_Cid;
         IncomingWalker(const ContractID& cid) :m_Cid(cid) {}
 
-        Pipe::RemoteID m_Remote;
+        PubKey m_Relayer;
         Env::VarReaderEx<true> m_Reader;
         Env::Key_T<Pipe::RemoteMsgHdr::Key> m_Key;
         Pipe::RemoteMsgHdr m_Msg;
@@ -66,7 +59,7 @@ namespace
             if (!params.get(m_Cid))
                 return false;
 
-            m_Remote = params.m_Remote;
+            m_Relayer = params.m_Relayer;
 
             Env::Key_T<Pipe::RemoteMsgHdr::Key> k1;
             //k1.m_Prefix.m_Cid = params.m_PipeID;
@@ -146,18 +139,18 @@ namespace manager
         EnumAndDumpContracts(Pipe::s_SID);
     }
 
-    void SetRemote()
+    void SetRelayer()
     {
         ContractID cid;
         Env::DocGet(CONTRACT_ID, cid);
 
-        Pipe::RemoteID addressRemote;
-        Env::DocGetBlobEx(ADDRESS_REMOTE, &addressRemote, sizeof(addressRemote));
+        PubKey pk;
+        Env::DocGet(RELAYER, pk);
 
-        Pipe::SetRemote args;
-        args.m_Remote = addressRemote;
+        Pipe::SetRelayer args;
+        args.m_Relayer = pk;
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Set remote ID counter-part", 0);
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Set relayer public key", 0);
     }
 
     void GetPk()
@@ -340,9 +333,9 @@ BEAM_EXPORT void Method_0()
         Env::DocGroup grMethod("view");
     }
     {
-        Env::DocGroup grMethod("set_remote");
+        Env::DocGroup grMethod("set_relayer");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(ADDRESS_REMOTE, "Address");
+        Env::DocAddText(RELAYER, "PubKey");
     }
     {
         Env::DocGroup grMethod("get_pk");
@@ -364,14 +357,9 @@ BEAM_EXPORT void Method_0()
         Env::DocGroup grMethod("push_remote");
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint32");
-        Env::DocAddText(HEIGHT, "Height");
-        Env::DocAddText(TIMESTAMP, "uint64");
-        Env::DocAddText(CONTRACT_RECEIVER, "ContractID");
-        Env::DocAddText(CONTRACT_SENDER, "Address");
         Env::DocAddText(AMOUNT, "uint64");
         Env::DocAddText(RELAYER_FEE, "uint64");
         Env::DocAddText(RECEIVER, "PubKey");
-        Env::DocAddText(RELAYER, "PubKey");
     }
     // local
     {
@@ -414,9 +402,9 @@ BEAM_EXPORT void Method_1()
     {
         manager::View();
     }
-    else if (!Env::Strcmp(szAction, "set_remote"))
+    else if (!Env::Strcmp(szAction, "set_relayer"))
     {
-        manager::SetRemote();
+        manager::SetRelayer();
     }
     else if (!Env::Strcmp(szAction, "get_pk"))
     {
