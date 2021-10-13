@@ -50,6 +50,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
     Env::FundsLock(params.m_Aid, (msg.m_Amount + msg.m_RelayerFee));
+    Env::AssetEmit(params.m_Aid, (msg.m_Amount + msg.m_RelayerFee), 0);
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
