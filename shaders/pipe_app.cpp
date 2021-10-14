@@ -10,7 +10,8 @@ namespace Pipe
 
 namespace
 {
-    const char* METADATA = "metadata";
+    const char* TOKEN_CID = "tokenCID";
+    const char* TOKEN_AID = "tokenAID";
     const char* CONTRACT_ID = "cid";
     const char* AMOUNT = "amount";
     const char* RELAYER_FEE = "relayerFee";
@@ -112,26 +113,16 @@ namespace manager
 {
     void Create()
     {
-        int32_t metaSize = Env::DocGetText(METADATA, nullptr, 0);
-        if (metaSize < 2)
-        {
-            OnError("metadata should be non-empty");
-            return;
-        }
-
-        auto* args = (Pipe::Create*)Env::StackAlloc(sizeof(Pipe::Create) + metaSize);
-
-        Env::DocGetText(METADATA, (char*)(args + 1), metaSize);
-        metaSize--; // ??????
-
-        args->m_MetadataSize = metaSize;
+        Pipe::Create args;
+        Env::DocGet(TOKEN_CID, args.m_TokenID);
+        Env::DocGetNum32(TOKEN_AID, &args.m_Aid);
 
         FundsChange fc;
         fc.m_Aid = 0; // asset id
         fc.m_Amount = SHADER_PRICE; // amount of the input or output
         fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
 
-        Env::GenerateKernel(nullptr, args->s_iMethod, args, sizeof(*args) + metaSize, &fc, 1, nullptr, 0, "create Pipe contract", 0);
+        Env::GenerateKernel(nullptr, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "create Pipe contract", 0);
     }
 
     void View()
@@ -337,7 +328,8 @@ BEAM_EXPORT void Method_0()
     Env::DocGroup root("");
     {
         Env::DocGroup grMethod("create");
-        Env::DocAddText(METADATA, "string");
+        Env::DocAddText(TOKEN_CID, "ContractID");
+        Env::DocAddText(TOKEN_AID, "AssedID");
     }
     {
         Env::DocGroup grMethod("view");

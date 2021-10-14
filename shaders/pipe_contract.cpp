@@ -3,14 +3,15 @@
 #include "pipe_contract.h"
 #include "Shaders/Ethash.h"
 #include "Shaders/Eth.h"
+#include "token_contract.h"
 
 // Method_0 - constructor, called once when the contract is deployed
 BEAM_EXPORT void Ctor(const Pipe::Create& args)
 {
     Pipe::Params params;
     
-    params.m_Aid = Env::AssetCreate(&args + 1, args.m_MetadataSize);
-    Env::Halt_if(!params.m_Aid);
+    params.m_Aid = args.m_Aid;//Env::AssetCreate(&args + 1, args.m_MetadataSize);
+    _POD_(params.m_TokenID) = args.m_TokenID;
 
     Env::SaveVar_T(Pipe::PARAMS_KEY, params);
 }
@@ -49,8 +50,11 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
 
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
-    Env::FundsLock(params.m_Aid, (msg.m_Amount + msg.m_RelayerFee));
-    Env::AssetEmit(params.m_Aid, (msg.m_Amount + msg.m_RelayerFee), 0);
+    Token::Burn burn;
+
+    burn.m_Amount = msg.m_Amount + msg.m_RelayerFee;
+
+    Env::CallFar_T(params.m_TokenID, burn);
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
@@ -65,10 +69,13 @@ BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
     // mint asset
-    Env::AssetEmit(params.m_Aid, msg.m_Amount, 1);
-
-    Env::FundsUnlock(params.m_Aid, msg.m_Amount);
     Env::AddSig(msg.m_UserPK);
+
+    Token::Mint mint;
+
+    mint.m_Amount = msg.m_Amount;
+
+    Env::CallFar_T(params.m_TokenID, mint);
 }
 
 BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
@@ -86,7 +93,11 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
 
     // mint asset
-    Env::AssetEmit(params.m_Aid, msg.m_RelayerFee, 1);
-    Env::FundsUnlock(params.m_Aid, msg.m_RelayerFee);
     Env::AddSig(params.m_Relayer);
+
+    Token::Mint mint;
+
+    mint.m_Amount = msg.m_RelayerFee;
+
+    Env::CallFar_T(params.m_TokenID, mint);
 }

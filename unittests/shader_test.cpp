@@ -183,7 +183,7 @@ namespace beam
 
 		void MyProcessor::TestPipe()
 		{
-			const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
+			/*const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
 			const uint32_t metadataSize = sizeof(metadata);
 
 #pragma pack (push, 1)
@@ -201,7 +201,7 @@ namespace beam
 
 			bvm2::ShaderID sid;
 			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
-			VERIFY_ID(Shaders::Pipe::s_SID, sid);
+			VERIFY_ID(Shaders::Pipe::s_SID, sid);*/
 		}
 	} // namespace bvm2
 } // namespace beam

@@ -50,7 +50,8 @@ namespace Pipe
     {
         static const uint32_t s_iMethod = 0;
 
-        uint32_t m_MetadataSize;
+        ContractID m_TokenID;
+        AssetID m_Aid;
     };
 
     struct SetRelayer
@@ -87,6 +88,7 @@ namespace Pipe
     struct Params
     {
         PubKey m_Relayer;
+        ContractID m_TokenID;
         AssetID m_Aid;
     };
 #pragma pack (pop)
