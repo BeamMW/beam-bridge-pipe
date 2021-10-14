@@ -144,11 +144,8 @@ namespace manager
         ContractID cid;
         Env::DocGet(CONTRACT_ID, cid);
 
-        PubKey pk;
-        Env::DocGet(RELAYER, pk);
-
         Pipe::SetRelayer args;
-        args.m_Relayer = pk;
+        Env::DocGet(RELAYER, args.m_Relayer);
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Set relayer public key", 0);
     }
@@ -340,7 +337,7 @@ BEAM_EXPORT void Method_0()
     Env::DocGroup root("");
     {
         Env::DocGroup grMethod("create");
-        Env::DocAddText("metadata", "string");
+        Env::DocAddText(METADATA, "string");
     }
     {
         Env::DocGroup grMethod("view");

@@ -1,0 +1,146 @@
+#include "Shaders/common.h"
+#include "Shaders/app_common_impl.h"
+#include "token_contract.h"
+
+namespace Token
+{
+#include "token_contract_sid.i"
+}
+
+namespace
+{
+    const char* METADATA = "metadata";
+    const char* CONTRACT_ID = "cid";
+    const char* AMOUNT = "amount";
+    const char* OWNER = "owner";
+    const char* MANAGER = "manager";
+
+    const Amount SHADER_PRICE = 300000000000ULL;
+
+    void OnError(const char* sz)
+    {
+        Env::DocAddText("error", sz);
+    }
+} // namespace
+
+namespace manager
+{
+    void Create()
+    {
+        int32_t metaSize = Env::DocGetText(METADATA, nullptr, 0);
+        if (metaSize < 2)
+        {
+            OnError("metadata should be non-empty");
+            return;
+        }
+
+        auto* args = (Token::Create*)Env::StackAlloc(sizeof(Token::Create) + metaSize);
+
+        Env::DocGetText(METADATA, (char*)(args + 1), metaSize);
+        metaSize--; // ??????
+
+        args->m_MetadataSize = metaSize;
+
+        Env::DocGet(OWNER, args->m_Owner);
+
+        FundsChange fc;
+        fc.m_Aid = 0; // asset id
+        fc.m_Amount = SHADER_PRICE; // amount of the input or output
+        fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
+
+        Env::GenerateKernel(nullptr, args->s_iMethod, args, sizeof(*args) + metaSize, &fc, 1, nullptr, 0, "create Token contract", 0);
+    }
+
+    void View()
+    {
+        EnumAndDumpContracts(Token::s_SID);
+    }
+
+    void ChangeOwner()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        Token::ChangeOwner args;
+        Env::DocGet(OWNER, args.m_NewOwner);
+                
+        SigRequest sig;
+        sig.m_pID = &cid;
+        sig.m_nID = sizeof(cid);
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, &sig, 1, "Change owner", 0);
+    }
+
+    void ChangeManager()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        Token::ChangeManager args;
+        Env::DocGet(MANAGER, args.m_NewContractId);
+
+        SigRequest sig;
+        sig.m_pID = &cid;
+        sig.m_nID = sizeof(cid);
+
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, &sig, 1, "Change contract id of manager", 0);
+    }
+} // namespace manager
+
+BEAM_EXPORT void Method_0()
+{
+    // scheme
+    Env::DocGroup root("");
+    {
+        Env::DocGroup grMethod("create");
+        Env::DocAddText(METADATA, "string");
+        Env::DocAddText(OWNER, "PubKey");
+    }
+    {
+        Env::DocGroup grMethod("view");
+    }
+    {
+        Env::DocGroup grMethod("change_owner");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(OWNER, "PubKey");
+    }
+    {
+        Env::DocGroup grMethod("change_manager");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+        Env::DocAddText(MANAGER, "ContractID");
+    }
+}
+
+BEAM_EXPORT void Method_1()
+{
+    Env::DocGroup root("");
+
+    char szAction[20];
+
+    if (!Env::DocGetText("action", szAction, sizeof(szAction)))
+    {
+        OnError("Action not specified");
+        return;
+    }
+
+    if (!Env::Strcmp(szAction, "create"))
+    {
+        manager::Create();
+    }
+    else if (!Env::Strcmp(szAction, "view"))
+    {
+        manager::View();
+    }
+    else if (!Env::Strcmp(szAction, "change_owner"))
+    {
+        manager::ChangeOwner();
+    }
+    else if (!Env::Strcmp(szAction, "change_manager"))
+    {
+        manager::ChangeManager();
+    }
+    else
+    {
+        OnError("invalid Action.");
+    }
+}
