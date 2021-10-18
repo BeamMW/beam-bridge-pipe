@@ -117,12 +117,7 @@ namespace manager
         Env::DocGet(TOKEN_CID, args.m_TokenID);
         Env::DocGetNum32(TOKEN_AID, &args.m_Aid);
 
-        FundsChange fc;
-        fc.m_Aid = 0; // asset id
-        fc.m_Amount = SHADER_PRICE; // amount of the input or output
-        fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
-
-        Env::GenerateKernel(nullptr, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "create Pipe contract", 0);
+        Env::GenerateKernel(nullptr, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "create Pipe contract", 0);
     }
 
     void View()

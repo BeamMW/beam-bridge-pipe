@@ -88,10 +88,12 @@ namespace manager
         Env::DocGet(CONTRACT_ID, cid);
 
         ParamsPlus params;
-        if (!params.get(m_Cid))
-            return false;
+        if (!params.get(cid))
+        {
+            return;
+        }
 
-        Env::DocAddNum(AID, msg.m_Amount);
+        Env::DocAddNum(AID, params.m_Aid);
     }
 
     void ChangeOwner()

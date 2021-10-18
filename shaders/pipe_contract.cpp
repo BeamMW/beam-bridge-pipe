@@ -10,7 +10,7 @@ BEAM_EXPORT void Ctor(const Pipe::Create& args)
 {
     Pipe::Params params;
     
-    params.m_Aid = args.m_Aid;//Env::AssetCreate(&args + 1, args.m_MetadataSize);
+    params.m_Aid = args.m_Aid;
     _POD_(params.m_TokenID) = args.m_TokenID;
 
     Env::SaveVar_T(Pipe::PARAMS_KEY, params);
@@ -23,6 +23,7 @@ BEAM_EXPORT void Dtor(void*)
 
 BEAM_EXPORT void Method_2(const Pipe::SetRelayer& args)
 {
+    // TODO roman.strilets set only one time
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
