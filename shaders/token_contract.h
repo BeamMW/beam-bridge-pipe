@@ -11,7 +11,6 @@ namespace Token
         static const uint32_t s_iMethod = 0;
 
         uint32_t m_MetadataSize;
-        PubKey m_Owner;
     };
 
     struct ChangeOwner
@@ -42,11 +41,19 @@ namespace Token
         Amount m_Amount;
     };
 
+    struct Init
+    {
+        static const uint32_t s_iMethod = 6;
+
+        PubKey m_Owner;
+    };
+
     struct Params
     {
         PubKey m_Owner;
         ContractID m_ContractId;
         AssetID m_Aid;
+        bool m_IsInit;
     };
 #pragma pack (pop)
 } // namespace Token

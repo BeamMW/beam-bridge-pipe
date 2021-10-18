@@ -14,6 +14,7 @@ namespace
     const char* AMOUNT = "amount";
     const char* OWNER = "owner";
     const char* MANAGER = "manager";
+    const char* AID = "aid";
 
     const Amount SHADER_PRICE = 300000000000ULL;
 
@@ -21,6 +22,22 @@ namespace
     {
         Env::DocAddText("error", sz);
     }
+
+    struct ParamsPlus : public Token::Params
+    {
+        bool get(const ContractID& cid)
+        {
+            Env::Key_T<uint8_t> gk;
+            _POD_(gk.m_Prefix.m_Cid) = cid;
+            gk.m_KeyInContract = Token::PARAMS_KEY;
+
+            if (Env::VarReader::Read_T(gk, *this))
+                return true;
+
+            OnError("no params");
+            return false;
+        }
+    };
 } // namespace
 
 namespace manager
@@ -41,8 +58,6 @@ namespace manager
 
         args->m_MetadataSize = metaSize;
 
-        Env::DocGet(OWNER, args->m_Owner);
-
         FundsChange fc;
         fc.m_Aid = 0; // asset id
         fc.m_Amount = SHADER_PRICE; // amount of the input or output
@@ -54,6 +69,29 @@ namespace manager
     void View()
     {
         EnumAndDumpContracts(Token::s_SID);
+    }
+
+    void Init()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        Token::Init args;
+
+        Env::DerivePk(args.m_Owner, &cid, sizeof(cid));
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "Init token", 0);
+    }
+
+    void GetAid()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        ParamsPlus params;
+        if (!params.get(m_Cid))
+            return false;
+
+        Env::DocAddNum(AID, msg.m_Amount);
     }
 
     void ChangeOwner()
@@ -94,10 +132,17 @@ BEAM_EXPORT void Method_0()
     {
         Env::DocGroup grMethod("create");
         Env::DocAddText(METADATA, "string");
-        Env::DocAddText(OWNER, "PubKey");
     }
     {
         Env::DocGroup grMethod("view");
+    }
+    {
+        Env::DocGroup grMethod("init");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
+    }
+    {
+        Env::DocGroup grMethod("get_aid");
+        Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
         Env::DocGroup grMethod("change_owner");
@@ -130,6 +175,14 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, "view"))
     {
         manager::View();
+    }
+    else if (!Env::Strcmp(szAction, "init"))
+    {
+        manager::Init();
+    }
+    else if (!Env::Strcmp(szAction, "get_aid"))
+    {
+        manager::GetAid();
     }
     else if (!Env::Strcmp(szAction, "change_owner"))
     {

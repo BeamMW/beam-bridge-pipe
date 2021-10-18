@@ -7,8 +7,7 @@ BEAM_EXPORT void Ctor(const Token::Create& args)
 
     params.m_Aid = Env::AssetCreate(&args + 1, args.m_MetadataSize);
     Env::Halt_if(!params.m_Aid);
-
-    _POD_(params.m_Owner) = args.m_Owner;
+    params.m_IsInit = false;
 
     Env::SaveVar_T(Token::PARAMS_KEY, params);
 }
@@ -66,4 +65,17 @@ BEAM_EXPORT void Method_5(const Token::Burn& args)
 
     Env::FundsLock(params.m_Aid, args.m_Amount);
     Env::AssetEmit(params.m_Aid, args.m_Amount, 0);
+}
+
+BEAM_EXPORT void Method_6(const Token::Init& args)
+{
+    Token::Params params;
+    Env::LoadVar_T(Token::PARAMS_KEY, params);
+
+    Env::Halt_if(params.m_IsInit);
+
+    _POD_(params.m_Owner) = args.m_Owner;
+    params.m_IsInit = true;
+
+    Env::SaveVar_T(Token::PARAMS_KEY, params);
 }
