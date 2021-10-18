@@ -218,6 +218,8 @@ namespace manager
         Env::DocGetNum64(RELAYER_FEE, &args.m_RemoteMsg.m_RelayerFee);
         Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
 
+        // TODO roman.strilets should to check msgId. maybe it is processed
+
         ParamsPlus params;
         if (!params.get(cid))
             return;
@@ -231,7 +233,7 @@ namespace manager
         sig.m_pID = &cid;
         sig.m_nID = sizeof(cid);
 
-        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), nullptr, 0, &sig, 1, "Push remote message", 0);
+        Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, &sig, 1, "Push remote message", 0);
     }
 
     void ViewIncomingMsg()
