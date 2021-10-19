@@ -47,7 +47,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     msg.m_Amount = args.m_Amount;
     msg.m_RelayerFee = args.m_RelayerFee;
 
-    Env::SaveVar(&msgKey, sizeof(msgKey), &msg, sizeof(msg), KeyTag::Internal);
+    Env::SaveVar_T(msgKey, msg);
 
     Env::SaveVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
@@ -60,11 +60,15 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
 {
+    bool received;
+    Env::Halt_if(!Env::LoadVar_T(args.m_MsgId, received));
+    Env::Halt_if(received);
+
     Pipe::RemoteMsgHdr::Key keyMsg;
     keyMsg.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
 
     Pipe::RemoteMsgHdr msg;
-    Env::LoadVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
+    Env::Halt_if(!Env::LoadVar_T(keyMsg, msg));
 
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
@@ -77,11 +81,16 @@ BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
     mint.m_Amount = msg.m_Amount;
 
     Env::CallFar_T(params.m_TokenID, mint);
+
+    Env::SaveVar_T(args.m_MsgId, true);
 }
 
 BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
 {
-    // TODO check lock funds
+    bool received;
+    // push only onte time
+    Env::Halt_if(Env::LoadVar_T(args.m_MsgId, received));
+
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
@@ -91,7 +100,9 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
     Pipe::RemoteMsgHdr msg;
     _POD_(msg) = args.m_RemoteMsg;
 
-    Env::SaveVar(&keyMsg, sizeof(keyMsg), &msg, sizeof(msg), KeyTag::Internal);
+    Env::SaveVar_T(keyMsg, msg);
+
+    Env::SaveVar_T(args.m_MsgId, false);
 
     // mint asset
     Env::AddSig(params.m_Relayer);

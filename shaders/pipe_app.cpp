@@ -99,6 +99,7 @@ namespace
 
         while (wlk.MoveNext(pPk))
         {
+            // TODO roman.strilets don't show received message
             Env::DocGroup gr("");
             Env::DocAddNum("MsgId", Utils::FromBE(wlk.m_Key.m_KeyInContract.m_MsgId_BE));
             Env::DocAddNum("amount", wlk.m_Msg.m_Amount);
@@ -162,7 +163,7 @@ namespace manager
 
         FundsChange fc;
         fc.m_Aid = params.m_Aid;
-        fc.m_Amount = args.m_Amount;
+        fc.m_Amount = args.m_Amount + args.m_RelayerFee;
         fc.m_Consume = 1;
 
         Env::GenerateKernel(&cid, args.s_iMethod, &args, sizeof(args), &fc, 1, nullptr, 0, "Send funds", 0);
@@ -181,17 +182,32 @@ namespace manager
         Env::DocGetNum32(MSG_ID, &args.m_MsgId);
 
         Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
+        Pipe::RemoteMsgHdr msg;
+
         msgKey.m_Prefix.m_Cid = cid;
         msgKey.m_KeyInContract.m_MsgId_BE = Utils::FromBE(args.m_MsgId);
-
-        Env::VarReader reader(msgKey, msgKey);
-
-        uint32_t keySize = sizeof(msgKey);
-        Pipe::RemoteMsgHdr msg;
-        uint32_t size = sizeof(msg);
-        if (!reader.MoveNext(nullptr, keySize, &msg, size, 0))
+        
+        if (!Env::VarReader::Read_T(msgKey, msg))
         {
             OnError("msg with current id is absent");
+            return;
+        }
+
+        // check msgId. maybe it is processed
+        Env::Key_T<uint32_t> receivedKey;
+        receivedKey.m_Prefix.m_Cid = cid;
+        receivedKey.m_KeyInContract = args.m_MsgId;
+
+        bool received = false;
+        if (!Env::VarReader::Read_T(receivedKey, received))
+        {
+            OnError("msg with current id is absent");
+            return;
+        }
+
+        if (received)
+        {
+            OnError("msg is processed");
             return;
         }
 
@@ -218,7 +234,17 @@ namespace manager
         Env::DocGetNum64(RELAYER_FEE, &args.m_RemoteMsg.m_RelayerFee);
         Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
 
-        // TODO roman.strilets should to check msgId. maybe it is processed
+        // check msgId. maybe it is processed
+        Env::Key_T<uint32_t> receivedKey;
+        receivedKey.m_Prefix.m_Cid = cid;
+        receivedKey.m_KeyInContract = args.m_MsgId;
+
+        bool received;
+        if (Env::VarReader::Read_T(receivedKey, received))
+        {
+            OnError("msg is exist");
+            return;
+        }
 
         ParamsPlus params;
         if (!params.get(cid))
