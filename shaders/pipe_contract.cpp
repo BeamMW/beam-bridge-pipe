@@ -46,6 +46,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Pipe::LocalMsgHdr msg;
     msg.m_Amount = args.m_Amount;
     msg.m_RelayerFee = args.m_RelayerFee;
+    _POD_(msg.m_Receiver) = args.m_Receiver;
 
     Env::SaveVar_T(msgKey, msg);
 
