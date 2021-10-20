@@ -99,7 +99,6 @@ namespace
 
         while (wlk.MoveNext(pPk))
         {
-            // TODO roman.strilets don't show received message
             Env::DocGroup gr("");
             Env::DocAddNum("MsgId", Utils::FromBE(wlk.m_Key.m_KeyInContract.m_MsgId_BE));
             Env::DocAddNum("amount", wlk.m_Msg.m_Amount);

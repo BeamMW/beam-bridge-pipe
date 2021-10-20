@@ -82,6 +82,7 @@ BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
 
     Env::CallFar_T(params.m_TokenID, mint);
 
+    Env::DelVar_T(keyMsg);
     Env::SaveVar_T(args.m_MsgId, true);
 }
 
