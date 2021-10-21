@@ -44,6 +44,7 @@ namespace Pipe
         RemoteID m_Receiver;
         Amount m_Amount;
         Amount m_RelayerFee;
+        Height m_Height;
     };
 
     struct Create

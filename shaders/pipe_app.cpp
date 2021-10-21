@@ -314,6 +314,7 @@ namespace manager
         Env::DocAddNum(AMOUNT, msg.m_Amount);
         Env::DocAddNum(RELAYER_FEE, msg.m_RelayerFee);
         Env::DocAddBlob_T(RECEIVER, msg.m_Receiver);
+        Env::DocAddNum("height", msg.m_Height);
     }
 
     void GetRemoteMsg()
