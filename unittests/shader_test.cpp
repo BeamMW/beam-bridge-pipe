@@ -32,11 +32,21 @@ namespace Shaders
 #include "Shaders/BeamHeader.h"
 #include "Shaders/Eth.h"
 
+#include "../shaders/token_contract.h"
 #include "../shaders/pipe_contract.h"
+
+	template <bool bToShader> void Convert(Token::Create& x)
+	{
+		ConvertOrd<bToShader>(x.m_MetadataSize);
+	}
+
+	template <bool bToShader> void Convert(Token::Init& x)
+	{
+	}
 
 	template <bool bToShader> void Convert(Pipe::Create& x)
 	{
-		ConvertOrd<bToShader>(x.m_MetadataSize);
+		ConvertOrd<bToShader>(x.m_Aid);
 	}
 
 	namespace Env
@@ -51,6 +61,12 @@ namespace Shaders
 			//Convert<false>(args);
 		}
 	}
+
+	namespace Token
+	{
+#include "../shaders/token_contract_sid.i"
+#include "../shaders/token_contract.cpp"
+	} // namespace Token
 
 	namespace Pipe
 	{
@@ -96,9 +112,11 @@ namespace beam
 
 			struct Code
 			{
+				ByteBuffer m_Token;
 				ByteBuffer m_Pipe;
 			} m_Code;
 
+			ContractID m_cidToken;
 			ContractID m_cidPipe;
 
 			void CallFar(const ContractID& cid, uint32_t iMethod, Wasm::Word pArgs, uint8_t bInheritContext) override
@@ -118,6 +136,7 @@ namespace beam
 			}
 
 
+			void TestToken();
 			void TestPipe();
 
 			void TestAll();
@@ -137,8 +156,10 @@ namespace beam
 
 		void MyProcessor::TestAll()
 		{
+			AddCode(m_Code.m_Token, "token_contract.wasm");
 			AddCode(m_Code.m_Pipe, "pipe_contract.wasm");
 
+			TestToken();
 			TestPipe();
 		}
 
@@ -181,13 +202,13 @@ namespace beam
 
 #define VERIFY_ID(exp, actual) VerifyId(exp, actual, #exp)
 
-		void MyProcessor::TestPipe()
+		void MyProcessor::TestToken()
 		{
-			/*const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
+			const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
 			const uint32_t metadataSize = sizeof(metadata);
 
 #pragma pack (push, 1)
-			struct Arg : public Shaders::Pipe::Create
+			struct Arg : public Shaders::Token::Create
 			{
 				char metadata[metadataSize];
 			};
@@ -196,12 +217,36 @@ namespace beam
 
 			memcpy(args.metadata, metadata, metadataSize);
 			args.m_MetadataSize = metadataSize;
-			
-			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, args));
+
+			verify_test(ContractCreate_T(m_cidToken, m_Code.m_Token, args));
 
 			bvm2::ShaderID sid;
-			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
-			VERIFY_ID(Shaders::Pipe::s_SID, sid);*/
+			bvm2::get_ShaderID(sid, m_Code.m_Token);
+			VERIFY_ID(Shaders::Token::s_SID, sid);
+
+			Shaders::Token::Init initArgs;
+
+			Shaders::Env::DerivePk(initArgs.m_Owner, &m_cidToken, sizeof(m_cidToken));
+
+			verify_test(RunGuarded_T(m_cidToken, initArgs.s_iMethod, initArgs));
+
+			/*Shaders::Token::Params params;
+			Shaders::Env::Key_T<uint8_t> key;
+
+			key.m_Prefix.m_Cid = m_cidToken;
+			key.m_KeyInContract = Shaders::Token::PARAMS_KEY;
+
+			LoadVar(Blob(&key, sizeof(key)), Blob(&params, sizeof(params)));*/
+		}
+
+		void MyProcessor::TestPipe()
+		{
+			Shaders::Pipe::Create createArgs;
+
+			createArgs.m_TokenID = m_cidToken;
+			createArgs.m_Aid = 1;
+
+			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, createArgs));
 		}
 	} // namespace bvm2
 } // namespace beam
