@@ -44,9 +44,17 @@ namespace Shaders
 	{
 	}
 
+	template <bool bToShader> void Convert(Token::ChangeManager& x)
+	{
+	}
+
 	template <bool bToShader> void Convert(Pipe::Create& x)
 	{
 		ConvertOrd<bToShader>(x.m_Aid);
+	}
+
+	template <bool bToShader> void Convert(Pipe::SetRelayer& x)
+	{
 	}
 
 	namespace Env
@@ -230,13 +238,19 @@ namespace beam
 
 			verify_test(RunGuarded_T(m_cidToken, initArgs.s_iMethod, initArgs));
 
-			/*Shaders::Token::Params params;
-			Shaders::Env::Key_T<uint8_t> key;
+			VarKey key;
+			key.Set(m_cidToken);
+			key.Append(VarKey::Tag::Internal, Blob(&Shaders::Token::PARAMS_KEY, sizeof(Shaders::Token::PARAMS_KEY)));
 
-			key.m_Prefix.m_Cid = m_cidToken;
-			key.m_KeyInContract = Shaders::Token::PARAMS_KEY;
+			ByteBuffer buffer(sizeof(Shaders::Token::Params));
 
-			LoadVar(Blob(&key, sizeof(key)), Blob(&params, sizeof(params)));*/
+			LoadVar(key, buffer);
+
+			auto params = (Shaders::Token::Params*)(&buffer[0]);
+
+			verify_test(params->m_IsInit);
+			verify_test(params->m_Aid == 1);
+			verify_test(params->m_Owner == initArgs.m_Owner);
 		}
 
 		void MyProcessor::TestPipe()
@@ -247,6 +261,46 @@ namespace beam
 			createArgs.m_Aid = 1;
 
 			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, createArgs));
+
+			Shaders::Token::ChangeManager managerArgs;
+
+			managerArgs.m_NewContractId = m_cidPipe;
+			verify_test(RunGuarded_T(m_cidToken, managerArgs.s_iMethod, managerArgs));
+
+			Shaders::Pipe::SetRelayer relayerArgs;
+
+			Shaders::Env::DerivePk(relayerArgs.m_Relayer, &m_cidPipe, sizeof(m_cidPipe));
+			verify_test(RunGuarded_T(m_cidPipe, relayerArgs.s_iMethod, relayerArgs));
+
+			{
+				VarKey key;
+				key.Set(m_cidToken);
+				key.Append(VarKey::Tag::Internal, Blob(&Shaders::Token::PARAMS_KEY, sizeof(Shaders::Token::PARAMS_KEY)));
+
+				ByteBuffer buffer(sizeof(Shaders::Token::Params));
+
+				LoadVar(key, buffer);
+
+				auto params = (Shaders::Token::Params*)(&buffer[0]);
+
+				verify_test(params->m_ContractId == m_cidPipe);
+			}
+
+			{
+				VarKey key;
+				key.Set(m_cidPipe);
+				key.Append(VarKey::Tag::Internal, Blob(&Shaders::Pipe::PARAMS_KEY, sizeof(Shaders::Pipe::PARAMS_KEY)));
+
+				ByteBuffer buffer(sizeof(Shaders::Pipe::Params));
+
+				LoadVar(key, buffer);
+
+				auto params = (Shaders::Pipe::Params*)(&buffer[0]);
+
+				verify_test(params->m_Relayer == relayerArgs.m_Relayer);
+				verify_test(params->m_TokenID == m_cidToken);
+				verify_test(params->m_Aid == 1);
+			}
 		}
 	} // namespace bvm2
 } // namespace beam
