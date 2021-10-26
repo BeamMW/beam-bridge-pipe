@@ -3,9 +3,9 @@
 
 namespace Token
 {
-#pragma pack (push, 1) // the following structures will be stored in the node in binary form
     static const uint8_t PARAMS_KEY = 0;
 
+#pragma pack (push, 1) // the following structures will be stored in the node in binary form
     struct Create
     {
         static const uint32_t s_iMethod = 0;
@@ -24,7 +24,7 @@ namespace Token
     {
         static const uint32_t s_iMethod = 3;
 
-        ContractID m_NewContractId;
+        ContractID m_NewManager;
     };
 
     struct Mint
@@ -51,8 +51,8 @@ namespace Token
     struct Params
     {
         PubKey m_Owner;
-        ContractID m_ContractId;
-        AssetID m_Aid;
+        ContractID m_Manager;
+        AssetID m_AssetID;
         bool m_IsInit;
     };
 #pragma pack (pop)

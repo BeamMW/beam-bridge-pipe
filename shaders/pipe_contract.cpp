@@ -5,18 +5,16 @@
 #include "Shaders/Eth.h"
 #include "token_contract.h"
 
-// Method_0 - constructor, called once when the contract is deployed
 BEAM_EXPORT void Ctor(const Pipe::Create& args)
 {
     Pipe::Params params;
     
-    params.m_Aid = args.m_Aid;
-    _POD_(params.m_TokenID) = args.m_TokenID;
+    params.m_AssetID = args.m_AssetID;
+    _POD_(params.m_TokenCID) = args.m_TokenCID;
 
     Env::SaveVar_T(Pipe::PARAMS_KEY, params);
 }
 
-// Method_1 - destructor, called once when the contract is destroyed
 BEAM_EXPORT void Dtor(void*)
 {
 }
@@ -57,7 +55,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
 
     burn.m_Amount = msg.m_Amount + msg.m_RelayerFee;
 
-    Env::CallFar_T(params.m_TokenID, burn);
+    Env::CallFar_T(params.m_TokenCID, burn);
 }
 
 BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
@@ -82,7 +80,7 @@ BEAM_EXPORT void Method_4(const Pipe::ReceiveFunds& args)
 
     mint.m_Amount = msg.m_Amount;
 
-    Env::CallFar_T(params.m_TokenID, mint);
+    Env::CallFar_T(params.m_TokenCID, mint);
 
     Env::DelVar_T(keyMsg);
     Env::SaveVar_T(args.m_MsgId, true);
@@ -114,5 +112,5 @@ BEAM_EXPORT void Method_5(const Pipe::PushRemote& args)
 
     mint.m_Amount = msg.m_RelayerFee;
 
-    Env::CallFar_T(params.m_TokenID, mint);
+    Env::CallFar_T(params.m_TokenCID, mint);
 }

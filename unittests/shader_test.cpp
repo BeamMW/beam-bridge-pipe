@@ -50,7 +50,7 @@ namespace Shaders
 
 	template <bool bToShader> void Convert(Pipe::Create& x)
 	{
-		ConvertOrd<bToShader>(x.m_Aid);
+		ConvertOrd<bToShader>(x.m_AssetID);
 	}
 
 	template <bool bToShader> void Convert(Pipe::SetRelayer& x)
@@ -143,6 +143,21 @@ namespace beam
 				ProcessorContract::CallFar(cid, iMethod, pArgs, bInheritContext);
 			}
 
+			template<class Key, class Value>
+			Value ReadValue(ContractID cid, const Key& key)
+			{
+				VarKey varKey;
+				varKey.Set(cid);
+				varKey.Append(VarKey::Tag::Internal, Blob(&key, sizeof(Key)));
+
+				ByteBuffer buffer(sizeof(Value));
+
+				LoadVar(varKey, buffer);
+
+				auto result = (Value*)(&buffer[0]);
+
+				return *result;
+			}
 
 			void TestToken();
 			void TestPipe();
@@ -208,7 +223,7 @@ namespace beam
 			}
 		}
 
-#define VERIFY_ID(exp, actual) VerifyId(exp, actual, #exp)
+#define VERIFY_ID(exp, actual) VerifyId(exp, actual, #exp)		
 
 		void MyProcessor::TestToken()
 		{
@@ -238,33 +253,25 @@ namespace beam
 
 			verify_test(RunGuarded_T(m_cidToken, initArgs.s_iMethod, initArgs));
 
-			VarKey key;
-			key.Set(m_cidToken);
-			key.Append(VarKey::Tag::Internal, Blob(&Shaders::Token::PARAMS_KEY, sizeof(Shaders::Token::PARAMS_KEY)));
+			auto params = ReadValue<uint8_t, Shaders::Token::Params>(m_cidToken, Shaders::Token::PARAMS_KEY);
 
-			ByteBuffer buffer(sizeof(Shaders::Token::Params));
-
-			LoadVar(key, buffer);
-
-			auto params = (Shaders::Token::Params*)(&buffer[0]);
-
-			verify_test(params->m_IsInit);
-			verify_test(params->m_Aid == 1);
-			verify_test(params->m_Owner == initArgs.m_Owner);
+			verify_test(params.m_IsInit);
+			verify_test(params.m_AssetID == 1);
+			verify_test(params.m_Owner == initArgs.m_Owner);
 		}
 
 		void MyProcessor::TestPipe()
 		{
 			Shaders::Pipe::Create createArgs;
 
-			createArgs.m_TokenID = m_cidToken;
-			createArgs.m_Aid = 1;
+			createArgs.m_TokenCID = m_cidToken;
+			createArgs.m_AssetID = 1;
 
 			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, createArgs));
 
 			Shaders::Token::ChangeManager managerArgs;
 
-			managerArgs.m_NewContractId = m_cidPipe;
+			managerArgs.m_NewManager = m_cidPipe;
 			verify_test(RunGuarded_T(m_cidToken, managerArgs.s_iMethod, managerArgs));
 
 			Shaders::Pipe::SetRelayer relayerArgs;
@@ -273,33 +280,17 @@ namespace beam
 			verify_test(RunGuarded_T(m_cidPipe, relayerArgs.s_iMethod, relayerArgs));
 
 			{
-				VarKey key;
-				key.Set(m_cidToken);
-				key.Append(VarKey::Tag::Internal, Blob(&Shaders::Token::PARAMS_KEY, sizeof(Shaders::Token::PARAMS_KEY)));
+				auto params = ReadValue<uint8_t, Shaders::Token::Params>(m_cidToken, Shaders::Token::PARAMS_KEY);
 
-				ByteBuffer buffer(sizeof(Shaders::Token::Params));
-
-				LoadVar(key, buffer);
-
-				auto params = (Shaders::Token::Params*)(&buffer[0]);
-
-				verify_test(params->m_ContractId == m_cidPipe);
+				verify_test(params.m_Manager == m_cidPipe);
 			}
 
 			{
-				VarKey key;
-				key.Set(m_cidPipe);
-				key.Append(VarKey::Tag::Internal, Blob(&Shaders::Pipe::PARAMS_KEY, sizeof(Shaders::Pipe::PARAMS_KEY)));
+				auto params = ReadValue<uint8_t, Shaders::Pipe::Params>(m_cidPipe, Shaders::Pipe::PARAMS_KEY);
 
-				ByteBuffer buffer(sizeof(Shaders::Pipe::Params));
-
-				LoadVar(key, buffer);
-
-				auto params = (Shaders::Pipe::Params*)(&buffer[0]);
-
-				verify_test(params->m_Relayer == relayerArgs.m_Relayer);
-				verify_test(params->m_TokenID == m_cidToken);
-				verify_test(params->m_Aid == 1);
+				verify_test(params.m_Relayer == relayerArgs.m_Relayer);
+				verify_test(params.m_TokenCID == m_cidToken);
+				verify_test(params.m_AssetID == 1);
 			}
 		}
 	} // namespace bvm2

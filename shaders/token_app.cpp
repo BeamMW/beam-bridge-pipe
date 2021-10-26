@@ -59,7 +59,7 @@ namespace manager
         args->m_MetadataSize = metaSize;
 
         FundsChange fc;
-        fc.m_Aid = 0; // asset id
+        fc.m_Aid = 0; // beam id
         fc.m_Amount = SHADER_PRICE; // amount of the input or output
         fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
 
@@ -93,7 +93,7 @@ namespace manager
             return;
         }
 
-        Env::DocAddNum(AID, params.m_Aid);
+        Env::DocAddNum(AID, params.m_AssetID);
     }
 
     void ChangeOwner()
@@ -117,7 +117,7 @@ namespace manager
         Env::DocGet(CONTRACT_ID, cid);
 
         Token::ChangeManager args;
-        Env::DocGet(MANAGER, args.m_NewContractId);
+        Env::DocGet(MANAGER, args.m_NewManager);
 
         SigRequest sig;
         sig.m_pID = &cid;

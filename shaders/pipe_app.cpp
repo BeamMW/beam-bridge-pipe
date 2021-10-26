@@ -63,8 +63,7 @@ namespace
             m_Relayer = params.m_Relayer;
 
             Env::Key_T<Pipe::RemoteMsgHdr::Key> k1;
-            //k1.m_Prefix.m_Cid = params.m_PipeID;
-            k1.m_Prefix.m_Cid = m_Cid; // TODO check this ????
+            k1.m_Prefix.m_Cid = m_Cid;
             k1.m_KeyInContract.m_MsgId_BE = Utils::FromBE(iStartFrom);
 
             auto k2 = k1;
@@ -114,8 +113,8 @@ namespace manager
     void Create()
     {
         Pipe::Create args;
-        Env::DocGet(TOKEN_CID, args.m_TokenID);
-        Env::DocGetNum32(TOKEN_AID, &args.m_Aid);
+        Env::DocGet(TOKEN_CID, args.m_TokenCID);
+        Env::DocGetNum32(TOKEN_AID, &args.m_AssetID);
 
         Env::GenerateKernel(nullptr, args.s_iMethod, &args, sizeof(args), nullptr, 0, nullptr, 0, "create Pipe contract", 0);
     }
@@ -161,7 +160,7 @@ namespace manager
         Env::DocGetBlobEx(RECEIVER, &args.m_Receiver, sizeof(args.m_Receiver));
 
         FundsChange fc;
-        fc.m_Aid = params.m_Aid;
+        fc.m_Aid = params.m_AssetID;
         fc.m_Amount = args.m_Amount + args.m_RelayerFee;
         fc.m_Consume = 1;
 
@@ -211,7 +210,7 @@ namespace manager
         }
 
         FundsChange fc;
-        fc.m_Aid = params.m_Aid;
+        fc.m_Aid = params.m_AssetID;
         fc.m_Amount = msg.m_Amount;
         fc.m_Consume = 0;
 
@@ -250,7 +249,7 @@ namespace manager
             return;
 
         FundsChange fc;
-        fc.m_Aid = params.m_Aid;
+        fc.m_Aid = params.m_AssetID;
         fc.m_Amount = args.m_RemoteMsg.m_RelayerFee;
         fc.m_Consume = 0;
 

@@ -3,7 +3,6 @@
 
 namespace Pipe
 {
-#pragma pack (push, 1) // the following structures will be stored in the node in binary form
     static const uint8_t PARAMS_KEY = 0;
     static const uint8_t LOCAL_MSG_COUNTER_KEY = 5;
 
@@ -15,6 +14,7 @@ namespace Pipe
         static const uint8_t RemoteMsg = 3;
     };
 
+#pragma pack (push, 1) // the following structures will be stored in the node in binary form
     struct MsgKeyBase
     {
         uint8_t m_Type;
@@ -51,8 +51,8 @@ namespace Pipe
     {
         static const uint32_t s_iMethod = 0;
 
-        ContractID m_TokenID;
-        AssetID m_Aid;
+        ContractID m_TokenCID;
+        AssetID m_AssetID;
     };
 
     struct SetRelayer
@@ -89,8 +89,8 @@ namespace Pipe
     struct Params
     {
         PubKey m_Relayer;
-        ContractID m_TokenID;
-        AssetID m_Aid;
+        ContractID m_TokenCID;
+        AssetID m_AssetID;
     };
 #pragma pack (pop)
 }
