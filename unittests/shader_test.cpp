@@ -57,6 +57,24 @@ namespace Shaders
 	{
 	}
 
+	template <bool bToShader> void Convert(Pipe::PushRemote& x)
+	{
+		ConvertOrd<bToShader>(x.m_MsgId);
+		ConvertOrd<bToShader>(x.m_RemoteMsg.m_Amount);
+		ConvertOrd<bToShader>(x.m_RemoteMsg.m_RelayerFee);
+	}
+
+	template <bool bToShader> void Convert(Pipe::ReceiveFunds& x)
+	{
+		ConvertOrd<bToShader>(x.m_MsgId);
+	}
+
+	template <bool bToShader> void Convert(Pipe::SendFunds& x)
+	{
+		ConvertOrd<bToShader>(x.m_Amount);
+		ConvertOrd<bToShader>(x.m_RelayerFee);
+	}
+
 	namespace Env
 	{
 		void CallFarN(const ContractID& cid, uint32_t iMethod, void* pArgs, uint32_t nArgs, uint8_t bInheritContext);
@@ -113,10 +131,11 @@ namespace beam
 {
 	namespace bvm2 
 	{
-
 		struct MyProcessor
 			: public ContractTestProcessor
 		{
+
+
 
 			struct Code
 			{
@@ -144,13 +163,13 @@ namespace beam
 			}
 
 			template<class Key, class Value>
-			Value ReadValue(ContractID cid, const Key& key)
+			Value ReadValue(ContractID cid, const Key& key, uint8_t tag = VarKey::Tag::Internal)
 			{
 				VarKey varKey;
 				varKey.Set(cid);
-				varKey.Append(VarKey::Tag::Internal, Blob(&key, sizeof(Key)));
+				varKey.Append(tag, Blob(&key, sizeof(Key)));
 
-				ByteBuffer buffer(sizeof(Value));
+				ByteBuffer buffer;
 
 				LoadVar(varKey, buffer);
 
@@ -159,8 +178,11 @@ namespace beam
 				return *result;
 			}
 
-			void TestToken();
-			void TestPipe();
+			void TestTokenCreation();
+			void TestPipeCreation();
+			void TestPushRemote();
+			void TestReceiveFunds();
+			void TestSendFunds();
 
 			void TestAll();
 		};
@@ -182,8 +204,11 @@ namespace beam
 			AddCode(m_Code.m_Token, "token_contract.wasm");
 			AddCode(m_Code.m_Pipe, "pipe_contract.wasm");
 
-			TestToken();
-			TestPipe();
+			TestTokenCreation();
+			TestPipeCreation();
+			TestPushRemote();
+			TestReceiveFunds();
+			TestSendFunds();
 		}
 
 		struct CidTxt
@@ -225,7 +250,7 @@ namespace beam
 
 #define VERIFY_ID(exp, actual) VerifyId(exp, actual, #exp)		
 
-		void MyProcessor::TestToken()
+		void MyProcessor::TestTokenCreation()
 		{
 			const char metadata[] = "STD:SCH_VER=1;N=DemoX Coin;SN=DemoX;UN=DEMOX;NTHUN=DGROTH";
 			const uint32_t metadataSize = sizeof(metadata);
@@ -260,7 +285,7 @@ namespace beam
 			verify_test(params.m_Owner == initArgs.m_Owner);
 		}
 
-		void MyProcessor::TestPipe()
+		void MyProcessor::TestPipeCreation()
 		{
 			Shaders::Pipe::Create createArgs;
 
@@ -268,6 +293,10 @@ namespace beam
 			createArgs.m_AssetID = 1;
 
 			verify_test(ContractCreate_T(m_cidPipe, m_Code.m_Pipe, createArgs));
+
+			bvm2::ShaderID sid;
+			bvm2::get_ShaderID(sid, m_Code.m_Pipe);
+			VERIFY_ID(Shaders::Pipe::s_SID, sid);
 
 			Shaders::Token::ChangeManager managerArgs;
 
@@ -292,6 +321,60 @@ namespace beam
 				verify_test(params.m_TokenCID == m_cidToken);
 				verify_test(params.m_AssetID == 1);
 			}
+		}
+
+		void MyProcessor::TestPushRemote()
+		{
+			Shaders::Pipe::PushRemote pushRemoteArgs;
+
+			pushRemoteArgs.m_MsgId = 1;
+			pushRemoteArgs.m_RemoteMsg.m_Amount = 1000000000ULL;
+			pushRemoteArgs.m_RemoteMsg.m_RelayerFee = 100000000ULL;
+			Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
+
+			verify_test(RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
+
+			Shaders::Pipe::RemoteMsgHdr::Key key;
+
+			key.m_MsgId_BE = Shaders::Utils::FromBE(1U);
+
+			auto remoteMsg = ReadValue<Shaders::Pipe::RemoteMsgHdr::Key, Shaders::Pipe::RemoteMsgHdr>(m_cidPipe, key);
+
+			verify_test(remoteMsg.m_Amount == pushRemoteArgs.m_RemoteMsg.m_Amount);
+			verify_test(remoteMsg.m_RelayerFee == pushRemoteArgs.m_RemoteMsg.m_RelayerFee);
+			verify_test(remoteMsg.m_UserPK == pushRemoteArgs.m_RemoteMsg.m_UserPK);
+
+			verify_test(!RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
+		}
+
+		void MyProcessor::TestReceiveFunds()
+		{
+			Shaders::Pipe::ReceiveFunds receiveArgs;
+
+			receiveArgs.m_MsgId = 1;
+
+			verify_test(RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
+			// try double spending
+			verify_test(!RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
+		}
+
+		void MyProcessor::TestSendFunds()
+		{
+			Shaders::Pipe::SendFunds sendArgs;
+
+			sendArgs.m_Amount = 1000000000ULL;
+			sendArgs.m_RelayerFee = 100000000ULL;
+
+			verify_test(RunGuarded_T(m_cidPipe, sendArgs.s_iMethod, sendArgs));
+
+			Shaders::Pipe::LocalMsgHdr::Key key;
+
+			key.m_MsgId_BE = Shaders::Utils::FromBE(1U);
+
+			auto localMsg = ReadValue<Shaders::Pipe::LocalMsgHdr::Key, Shaders::Pipe::LocalMsgHdr>(m_cidPipe, key);
+
+			verify_test(localMsg.m_Amount == sendArgs.m_Amount);
+			verify_test(localMsg.m_RelayerFee == sendArgs.m_RelayerFee);
 		}
 	} // namespace bvm2
 } // namespace beam
