@@ -48,6 +48,16 @@ namespace Shaders
 	{
 	}
 
+	template <bool bToShader> void Convert(Token::Mint& x)
+	{
+		ConvertOrd<bToShader>(x.m_Amount);
+	}
+
+	template <bool bToShader> void Convert(Token::Burn& x)
+	{
+		ConvertOrd<bToShader>(x.m_Amount);
+	}
+
 	template <bool bToShader> void Convert(Pipe::Create& x)
 	{
 		ConvertOrd<bToShader>(x.m_AssetID);
@@ -134,9 +144,6 @@ namespace beam
 		struct MyProcessor
 			: public ContractTestProcessor
 		{
-
-
-
 			struct Code
 			{
 				ByteBuffer m_Token;
@@ -179,10 +186,12 @@ namespace beam
 			}
 
 			void TestTokenCreation();
+			void TestToken();
 			void TestPipeCreation();
 			void TestPushRemote();
 			void TestReceiveFunds();
 			void TestSendFunds();
+			void TestChangeManager();
 
 			void TestAll();
 		};
@@ -205,10 +214,12 @@ namespace beam
 			AddCode(m_Code.m_Pipe, "pipe_contract.wasm");
 
 			TestTokenCreation();
+			TestToken();
 			TestPipeCreation();
 			TestPushRemote();
 			TestReceiveFunds();
 			TestSendFunds();
+			TestChangeManager();
 		}
 
 		struct CidTxt
@@ -285,6 +296,21 @@ namespace beam
 			verify_test(params.m_Owner == initArgs.m_Owner);
 		}
 
+		void MyProcessor::TestToken()
+		{
+			Shaders::Token::Mint mintArgs;
+
+			mintArgs.m_Amount = 100000000ULL;
+
+			verify_test(!RunGuarded_T(m_cidToken, mintArgs.s_iMethod, mintArgs));
+
+			Shaders::Token::Burn burnArgs;
+
+			burnArgs.m_Amount = 100000000ULL;
+
+			verify_test(!RunGuarded_T(m_cidToken, burnArgs.s_iMethod, burnArgs));
+		}
+
 		void MyProcessor::TestPipeCreation()
 		{
 			Shaders::Pipe::Create createArgs;
@@ -344,6 +370,7 @@ namespace beam
 			verify_test(remoteMsg.m_RelayerFee == pushRemoteArgs.m_RemoteMsg.m_RelayerFee);
 			verify_test(remoteMsg.m_UserPK == pushRemoteArgs.m_RemoteMsg.m_UserPK);
 
+			// try to push message once again
 			verify_test(!RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
 		}
 
@@ -356,6 +383,10 @@ namespace beam
 			verify_test(RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
 			// try double spending
 			verify_test(!RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
+
+			// try to process unknown message
+			receiveArgs.m_MsgId = 3;
+			verify_test(!RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
 		}
 
 		void MyProcessor::TestSendFunds()
@@ -364,6 +395,7 @@ namespace beam
 
 			sendArgs.m_Amount = 1000000000ULL;
 			sendArgs.m_RelayerFee = 100000000ULL;
+			sendArgs.m_Receiver.Scan("ea674fdde714fd979de3edf0f56aa9716b898ec8");
 
 			verify_test(RunGuarded_T(m_cidPipe, sendArgs.s_iMethod, sendArgs));
 
@@ -375,6 +407,44 @@ namespace beam
 
 			verify_test(localMsg.m_Amount == sendArgs.m_Amount);
 			verify_test(localMsg.m_RelayerFee == sendArgs.m_RelayerFee);
+			verify_test(localMsg.m_Receiver == sendArgs.m_Receiver);
+		}
+
+		void MyProcessor::TestChangeManager()
+		{
+			Shaders::Token::ChangeManager managerArgs;
+
+			managerArgs.m_NewManager = m_cidToken;
+			verify_test(RunGuarded_T(m_cidToken, managerArgs.s_iMethod, managerArgs));
+
+			Shaders::Pipe::SendFunds sendArgs;
+
+			sendArgs.m_Amount = 1000000000ULL;
+			sendArgs.m_RelayerFee = 100000000ULL;
+			sendArgs.m_Receiver.Scan("ea674fdde714fd979de3edf0f56aa9716b898ec8");
+
+			verify_test(!RunGuarded_T(m_cidPipe, sendArgs.s_iMethod, sendArgs));
+
+			Shaders::Pipe::PushRemote pushRemoteArgs;
+
+			pushRemoteArgs.m_MsgId = 2;
+			pushRemoteArgs.m_RemoteMsg.m_Amount = 1000000000ULL;
+			pushRemoteArgs.m_RemoteMsg.m_RelayerFee = 100000000ULL;
+			Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
+
+			verify_test(!RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
+
+			Shaders::Pipe::ReceiveFunds receiveArgs;
+
+			receiveArgs.m_MsgId = pushRemoteArgs.m_MsgId;
+
+			verify_test(!RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
+
+			// restore manager to pipe shader
+			managerArgs.m_NewManager = m_cidPipe;
+			verify_test(RunGuarded_T(m_cidToken, managerArgs.s_iMethod, managerArgs));
+
+			verify_test(!RunGuarded_T(m_cidPipe, receiveArgs.s_iMethod, receiveArgs));
 		}
 	} // namespace bvm2
 } // namespace beam
