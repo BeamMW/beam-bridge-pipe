@@ -176,11 +176,11 @@ namespace beam
 				varKey.Set(cid);
 				varKey.Append(tag, Blob(&key, sizeof(Key)));
 
-				ByteBuffer buffer;
+				Blob buffer;
 
-				LoadVar(varKey, buffer);
+				LoadVar(Blob(varKey.m_p, varKey.m_Size), buffer);
 
-				auto result = (Value*)(&buffer[0]);
+				auto result = static_cast<const Value*>(buffer.p);
 
 				return *result;
 			}
