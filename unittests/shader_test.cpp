@@ -285,7 +285,8 @@ namespace beam
 
 			Shaders::Token::Init initArgs;
 
-			Shaders::Env::DerivePk(initArgs.m_Owner, &m_cidToken, sizeof(m_cidToken));
+			// it is not used in the test
+			//Shaders::Env::DerivePk(initArgs.m_Owner, &m_cidToken, sizeof(m_cidToken));
 
 			verify_test(RunGuarded_T(m_cidToken, initArgs.s_iMethod, initArgs));
 
@@ -330,8 +331,8 @@ namespace beam
 			verify_test(RunGuarded_T(m_cidToken, managerArgs.s_iMethod, managerArgs));
 
 			Shaders::Pipe::SetRelayer relayerArgs;
-
-			Shaders::Env::DerivePk(relayerArgs.m_Relayer, &m_cidPipe, sizeof(m_cidPipe));
+			// it is not used in the test
+			//Shaders::Env::DerivePk(relayerArgs.m_Relayer, &m_cidPipe, sizeof(m_cidPipe));
 			verify_test(RunGuarded_T(m_cidPipe, relayerArgs.s_iMethod, relayerArgs));
 
 			{
@@ -356,7 +357,8 @@ namespace beam
 			pushRemoteArgs.m_MsgId = 1;
 			pushRemoteArgs.m_RemoteMsg.m_Amount = 1000000000ULL;
 			pushRemoteArgs.m_RemoteMsg.m_RelayerFee = 100000000ULL;
-			Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
+			// it is not used in the test
+			//Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
 
 			verify_test(RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
 
@@ -430,7 +432,8 @@ namespace beam
 			pushRemoteArgs.m_MsgId = 2;
 			pushRemoteArgs.m_RemoteMsg.m_Amount = 1000000000ULL;
 			pushRemoteArgs.m_RemoteMsg.m_RelayerFee = 100000000ULL;
-			Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
+			// it is not used in the test
+			//Shaders::Env::DerivePk(pushRemoteArgs.m_RemoteMsg.m_UserPK, &m_cidPipe, sizeof(m_cidPipe));
 
 			verify_test(!RunGuarded_T(m_cidPipe, pushRemoteArgs.s_iMethod, pushRemoteArgs));
 
