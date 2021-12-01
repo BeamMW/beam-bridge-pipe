@@ -54,7 +54,7 @@ namespace
         Pipe::RemoteMsgHdr m_Msg;
 
 
-        bool Restart(uint32_t iStartFrom)
+        bool Restart(uint64_t iStartFrom)
         {
             ParamsPlus params;
             if (!params.get(m_Cid))
@@ -88,7 +88,7 @@ namespace
         }
     };
 
-    void ViewIncoming(const ContractID& cid, const PubKey* pPk, uint32_t iStartFrom)
+    void ViewIncoming(const ContractID& cid, const PubKey* pPk, uint64_t iStartFrom)
     {
         Env::DocArray gr("incoming");
 
@@ -177,7 +177,7 @@ namespace manager
             return;
 
         Pipe::ReceiveFunds args;
-        Env::DocGetNum32(MSG_ID, &args.m_MsgId);
+        Env::DocGetNum64(MSG_ID, &args.m_MsgId);
 
         Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
         Pipe::RemoteMsgHdr msg;
@@ -192,7 +192,7 @@ namespace manager
         }
 
         // check msgId. maybe it is processed
-        Env::Key_T<uint32_t> receivedKey;
+        Env::Key_T<uint64_t> receivedKey;
         receivedKey.m_Prefix.m_Cid = cid;
         receivedKey.m_KeyInContract = args.m_MsgId;
 
@@ -227,13 +227,13 @@ namespace manager
         Env::DocGet(CONTRACT_ID, cid);
 
         Pipe::PushRemote args;
-        Env::DocGetNum32(MSG_ID, &args.m_MsgId);
+        Env::DocGetNum64(MSG_ID, &args.m_MsgId);
         Env::DocGetNum64(AMOUNT, &args.m_RemoteMsg.m_Amount);
         Env::DocGetNum64(RELAYER_FEE, &args.m_RemoteMsg.m_RelayerFee);
         Env::DocGet(RECEIVER, args.m_RemoteMsg.m_UserPK);
 
         // check msgId. maybe it is processed
-        Env::Key_T<uint32_t> receivedKey;
+        Env::Key_T<uint64_t> receivedKey;
         receivedKey.m_Prefix.m_Cid = cid;
         receivedKey.m_KeyInContract = args.m_MsgId;
 
@@ -263,7 +263,7 @@ namespace manager
     void ViewIncomingMsg()
     {
         ContractID cid;
-        uint32_t startFrom = 0;
+        uint64_t startFrom = 0;
         Env::DocGet(CONTRACT_ID, cid);
         Env::DocGet(START_FROM, startFrom);
 
@@ -282,18 +282,18 @@ namespace manager
         key.m_KeyInContract = Pipe::LOCAL_MSG_COUNTER_KEY;
         key.m_Prefix.m_Cid = cid;
 
-        uint32_t localMsgCounter = 0;
+        uint64_t localMsgCounter = 0;
         Env::VarReader::Read_T(key, localMsgCounter);
 
-        Env::DocAddNum32("count", localMsgCounter);
+        Env::DocAddNum64("count", localMsgCounter);
     }
 
     void GetLocalMsg()
     {
         ContractID cid;
-        uint32_t msgId;
+        uint64_t msgId;
         Env::DocGet(CONTRACT_ID, cid);
-        Env::DocGetNum32(MSG_ID, &msgId);
+        Env::DocGetNum64(MSG_ID, &msgId);
 
         Env::Key_T<Pipe::LocalMsgHdr::Key> msgKey;
         msgKey.m_Prefix.m_Cid = cid;
@@ -319,9 +319,9 @@ namespace manager
     void GetRemoteMsg()
     {
         ContractID cid;
-        uint32_t msgId;
+        uint64_t msgId;
         Env::DocGet(CONTRACT_ID, cid);
-        Env::DocGetNum32(MSG_ID, &msgId);
+        Env::DocGetNum64(MSG_ID, &msgId);
 
         Env::Key_T<Pipe::RemoteMsgHdr::Key> msgKey;
         msgKey.m_Prefix.m_Cid = cid;
@@ -375,12 +375,12 @@ BEAM_EXPORT void Method_0()
     {
         Env::DocGroup grMethod("receive");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(MSG_ID, "uint64");
     }
     {
         Env::DocGroup grMethod("push_remote");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(MSG_ID, "uint64");
         Env::DocAddText(AMOUNT, "uint64");
         Env::DocAddText(RELAYER_FEE, "uint64");
         Env::DocAddText(RECEIVER, "PubKey");
@@ -397,12 +397,12 @@ BEAM_EXPORT void Method_0()
     {
         Env::DocGroup grMethod("local_msg");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(MSG_ID, "uint64");
     }
     {
         Env::DocGroup grMethod("remote_msg");
         Env::DocAddText(CONTRACT_ID, "ContractID");
-        Env::DocAddText(MSG_ID, "uint32");
+        Env::DocAddText(MSG_ID, "uint64");
     }
 }
 

@@ -19,7 +19,7 @@ namespace Pipe
     {
         uint8_t m_Type;
         // big-endian, for simpler enumeration by app shader
-        uint32_t m_MsgId_BE;
+        uint64_t m_MsgId_BE;
     };
 
     struct RemoteMsgHdr
@@ -75,14 +75,14 @@ namespace Pipe
     {
         static const uint32_t s_iMethod = 4;
 
-        uint32_t m_MsgId;
+        uint64_t m_MsgId;
     };
 
     struct PushRemote
     {
         static const uint32_t s_iMethod = 5;
 
-        uint32_t m_MsgId;
+        uint64_t m_MsgId;
         RemoteMsgHdr m_RemoteMsg;
     };
 

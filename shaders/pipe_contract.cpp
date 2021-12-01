@@ -35,7 +35,7 @@ BEAM_EXPORT void Method_3(const Pipe::SendFunds& args)
     Pipe::Params params;
     Env::LoadVar_T(Pipe::PARAMS_KEY, params);
 
-    uint32_t localMsgCounter = 0;
+    uint64_t localMsgCounter = 0;
     Env::LoadVar_T(Pipe::LOCAL_MSG_COUNTER_KEY, localMsgCounter);
 
     Pipe::LocalMsgHdr::Key msgKey;
