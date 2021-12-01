@@ -63,7 +63,7 @@ namespace manager
         fc.m_Amount = SHADER_PRICE; // amount of the input or output
         fc.m_Consume = 1; // contract consumes funds (i.e input, in this case)
 
-        Env::GenerateKernel(nullptr, args->s_iMethod, args, sizeof(*args) + metaSize, &fc, 1, nullptr, 0, "create Token contract", 0);
+        Env::GenerateKernel(nullptr, args->s_iMethod, args, sizeof(*args) + metaSize, &fc, 1, nullptr, 0, "create Token contract", 140000);
     }
 
     void View()
