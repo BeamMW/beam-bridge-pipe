@@ -54,7 +54,7 @@ namespace manager
         auto* args = (Token::Create*)Env::StackAlloc(sizeof(Token::Create) + metaSize);
 
         Env::DocGetText(METADATA, (char*)(args + 1), metaSize);
-        metaSize--; // ??????
+        metaSize--; // ignore last symbol '\0'
 
         args->m_MetadataSize = metaSize;
 
