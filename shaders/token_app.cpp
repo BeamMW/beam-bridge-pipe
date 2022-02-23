@@ -16,6 +16,16 @@ namespace
     const char* MANAGER = "manager";
     const char* AID = "aid";
 
+    namespace Actions
+    {
+        const char* CREATE = "create";
+        const char* VIEW = "view";
+        const char* INIT = "init";
+        const char* GET_AID = "get_aid";
+        const char* CHANGE_OWNER = "change_owner";
+        const char* CHANGE_MANAGER = "change_manager";
+    } // namespace Actions
+
     const Amount SHADER_PRICE = 300000000000ULL;
 
     void OnError(const char* sz)
@@ -132,27 +142,27 @@ BEAM_EXPORT void Method_0()
     // scheme
     Env::DocGroup root("");
     {
-        Env::DocGroup grMethod("create");
+        Env::DocGroup grMethod(Actions::CREATE);
         Env::DocAddText(METADATA, "string");
     }
     {
-        Env::DocGroup grMethod("view");
+        Env::DocGroup grMethod(Actions::VIEW);
     }
     {
-        Env::DocGroup grMethod("init");
+        Env::DocGroup grMethod(Actions::INIT);
         Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
-        Env::DocGroup grMethod("get_aid");
+        Env::DocGroup grMethod(Actions::GET_AID);
         Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
-        Env::DocGroup grMethod("change_owner");
+        Env::DocGroup grMethod(Actions::CHANGE_OWNER);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(OWNER, "PubKey");
     }
     {
-        Env::DocGroup grMethod("change_manager");
+        Env::DocGroup grMethod(Actions::CHANGE_MANAGER);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MANAGER, "ContractID");
     }
@@ -166,31 +176,31 @@ BEAM_EXPORT void Method_1()
 
     if (!Env::DocGetText("action", szAction, sizeof(szAction)))
     {
-        OnError("Action not specified");
+        OnError("Action should be specified");
         return;
     }
 
-    if (!Env::Strcmp(szAction, "create"))
+    if (!Env::Strcmp(szAction, Actions::CREATE))
     {
         manager::Create();
     }
-    else if (!Env::Strcmp(szAction, "view"))
+    else if (!Env::Strcmp(szAction, Actions::VIEW))
     {
         manager::View();
     }
-    else if (!Env::Strcmp(szAction, "init"))
+    else if (!Env::Strcmp(szAction, Actions::INIT))
     {
         manager::Init();
     }
-    else if (!Env::Strcmp(szAction, "get_aid"))
+    else if (!Env::Strcmp(szAction, Actions::GET_AID))
     {
         manager::GetAid();
     }
-    else if (!Env::Strcmp(szAction, "change_owner"))
+    else if (!Env::Strcmp(szAction, Actions::CHANGE_OWNER))
     {
         manager::ChangeOwner();
     }
-    else if (!Env::Strcmp(szAction, "change_manager"))
+    else if (!Env::Strcmp(szAction, Actions::CHANGE_MANAGER))
     {
         manager::ChangeManager();
     }

@@ -20,6 +20,21 @@ namespace
     const char* START_FROM = "startFrom";
     const char* RELAYER = "relayer";
 
+    namespace Actions
+    {
+        const char* CREATE = "create";
+        const char* VIEW = "view";
+        const char* SET_RELAYER = "set_relayer";
+        const char* GET_PK = "get_pk";
+        const char* SEND = "send";
+        const char* RECEIVE = "receive";
+        const char* PUSH_REMOTE = "push_remote";
+        const char* VIEW_INCOMING = "view_incoming";
+        const char* LOCAL_MSG_COUNT = "local_msg_count";
+        const char* LOCAL_MSG = "local_msg";
+        const char* REMOTE_MSG = "remote_msg";
+    } // namespace Actions
+
     const Amount SHADER_PRICE = 300000000000ULL;
 
     void OnError(const char* sz)
@@ -349,36 +364,36 @@ BEAM_EXPORT void Method_0()
     // scheme
     Env::DocGroup root("");
     {
-        Env::DocGroup grMethod("create");
+        Env::DocGroup grMethod(Actions::CREATE);
         Env::DocAddText(TOKEN_CID, "ContractID");
         Env::DocAddText(TOKEN_AID, "AssedID");
     }
     {
-        Env::DocGroup grMethod("view");
+        Env::DocGroup grMethod(Actions::VIEW);
     }
     {
-        Env::DocGroup grMethod("set_relayer");
+        Env::DocGroup grMethod(Actions::SET_RELAYER);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(RELAYER, "PubKey");
     }
     {
-        Env::DocGroup grMethod("get_pk");
+        Env::DocGroup grMethod(Actions::GET_PK);
         Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
-        Env::DocGroup grMethod("send");
+        Env::DocGroup grMethod(Actions::SEND);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(AMOUNT, "uint64");
         Env::DocAddText(RELAYER_FEE, "uint64");
         Env::DocAddText(RECEIVER, "Address");
     }
     {
-        Env::DocGroup grMethod("receive");
+        Env::DocGroup grMethod(Actions::RECEIVE);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint64");
     }
     {
-        Env::DocGroup grMethod("push_remote");
+        Env::DocGroup grMethod(Actions::PUSH_REMOTE);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint64");
         Env::DocAddText(AMOUNT, "uint64");
@@ -387,20 +402,20 @@ BEAM_EXPORT void Method_0()
     }
     // local
     {
-        Env::DocGroup grMethod("view_incoming");
+        Env::DocGroup grMethod(Actions::VIEW_INCOMING);
         Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
-        Env::DocGroup grMethod("local_msg_count");
+        Env::DocGroup grMethod(Actions::LOCAL_MSG_COUNT);
         Env::DocAddText(CONTRACT_ID, "ContractID");
     }
     {
-        Env::DocGroup grMethod("local_msg");
+        Env::DocGroup grMethod(Actions::LOCAL_MSG);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint64");
     }
     {
-        Env::DocGroup grMethod("remote_msg");
+        Env::DocGroup grMethod(Actions::REMOTE_MSG);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(MSG_ID, "uint64");
     }
@@ -414,51 +429,51 @@ BEAM_EXPORT void Method_1()
 
     if (!Env::DocGetText("action", szAction, sizeof(szAction)))
     {
-        OnError("Action not specified");
+        OnError("Action should be specified");
         return;
     }
 
-    if (!Env::Strcmp(szAction, "create"))
+    if (!Env::Strcmp(szAction, Actions::CREATE))
     {
         manager::Create();
     }
-    else if (!Env::Strcmp(szAction, "view"))
+    else if (!Env::Strcmp(szAction, Actions::VIEW))
     {
         manager::View();
     }
-    else if (!Env::Strcmp(szAction, "set_relayer"))
+    else if (!Env::Strcmp(szAction, Actions::SET_RELAYER))
     {
         manager::SetRelayer();
     }
-    else if (!Env::Strcmp(szAction, "get_pk"))
+    else if (!Env::Strcmp(szAction, Actions::GET_PK))
     {
         manager::GetPk();
     }
-    else if (!Env::Strcmp(szAction, "send"))
+    else if (!Env::Strcmp(szAction, Actions::SEND))
     {
         manager::SendFunds();
     }
-    else if (!Env::Strcmp(szAction, "receive"))
+    else if (!Env::Strcmp(szAction, Actions::RECEIVE))
     {
         manager::ReceiveFunds();
     }
-    else if (!Env::Strcmp(szAction, "push_remote"))
+    else if (!Env::Strcmp(szAction, Actions::PUSH_REMOTE))
     {
         manager::PushRemote();
     }
-    else if (!Env::Strcmp(szAction, "view_incoming"))
+    else if (!Env::Strcmp(szAction, Actions::VIEW_INCOMING))
     {
         manager::ViewIncomingMsg();
     }
-    else if (!Env::Strcmp(szAction, "local_msg_count"))
+    else if (!Env::Strcmp(szAction, Actions::LOCAL_MSG_COUNT))
     {
         manager::GetLocalMsgCount();
     }
-    else if (!Env::Strcmp(szAction, "local_msg"))
+    else if (!Env::Strcmp(szAction, Actions::LOCAL_MSG))
     {
         manager::GetLocalMsg();
     }
-    else if (!Env::Strcmp(szAction, "remote_msg"))
+    else if (!Env::Strcmp(szAction, Actions::REMOTE_MSG))
     {
         manager::GetRemoteMsg();
     }
