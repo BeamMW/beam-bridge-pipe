@@ -364,7 +364,7 @@ namespace beam
 
 			Shaders::Pipe::RemoteMsgHdr::Key key;
 
-			key.m_MsgId_BE = Shaders::Utils::FromBE(1ULL);
+			key.m_MsgId_BE = Shaders::Utils::FromBE(static_cast<uint64_t>(1));
 
 			auto remoteMsg = ReadValue<Shaders::Pipe::RemoteMsgHdr::Key, Shaders::Pipe::RemoteMsgHdr>(m_cidPipe, key);
 
@@ -403,7 +403,7 @@ namespace beam
 
 			Shaders::Pipe::LocalMsgHdr::Key key;
 
-			key.m_MsgId_BE = Shaders::Utils::FromBE(1ULL);
+			key.m_MsgId_BE = Shaders::Utils::FromBE(static_cast<uint64_t>(1));
 
 			auto localMsg = ReadValue<Shaders::Pipe::LocalMsgHdr::Key, Shaders::Pipe::LocalMsgHdr>(m_cidPipe, key);
 
