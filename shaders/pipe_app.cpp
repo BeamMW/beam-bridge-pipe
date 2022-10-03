@@ -35,8 +35,6 @@ namespace
         const char* REMOTE_MSG = "remote_msg";
     } // namespace Actions
 
-    const Amount SHADER_PRICE = 300000000000ULL;
-
     void OnError(const char* sz)
     {
         Env::DocAddText("error", sz);

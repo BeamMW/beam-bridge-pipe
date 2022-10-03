@@ -26,7 +26,7 @@ namespace
         const char* CHANGE_MANAGER = "change_manager";
     } // namespace Actions
 
-    const Amount SHADER_PRICE = 300000000000ULL;
+    const Amount SHADER_PRICE = 1000000000ULL;
 
     void OnError(const char* sz)
     {
