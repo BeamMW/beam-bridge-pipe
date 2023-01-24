@@ -24,6 +24,7 @@ namespace
     {
         const char* CREATE = "create";
         const char* VIEW = "view";
+        const char* VIEW_PARAMS = "view_params";
         const char* SET_RELAYER = "set_relayer";
         const char* GET_PK = "get_pk";
         const char* SEND = "send";
@@ -135,6 +136,24 @@ namespace manager
     void View()
     {
         EnumAndDumpContracts(Pipe::s_SID);
+    }
+
+    void ViewParams()
+    {
+        ContractID cid;
+        Env::DocGet(CONTRACT_ID, cid);
+
+        Env::Key_T<uint8_t> key;
+        key.m_KeyInContract = Pipe::PARAMS_KEY;
+        key.m_Prefix.m_Cid = cid;
+
+        Pipe::Params params;
+
+        Env::VarReader::Read_T(key, params);
+
+        Env::DocAddBlob_T("relayer pubkey", params.m_Relayer);
+        Env::DocAddBlob_T("tocken CID", params.m_TokenCID);
+        Env::DocAddNum64("token asset ID", params.m_AssetID);
     }
 
     void SetRelayer()
@@ -370,6 +389,9 @@ BEAM_EXPORT void Method_0()
         Env::DocGroup grMethod(Actions::VIEW);
     }
     {
+        Env::DocGroup grMethod(Actions::VIEW_PARAMS);
+    }
+    {
         Env::DocGroup grMethod(Actions::SET_RELAYER);
         Env::DocAddText(CONTRACT_ID, "ContractID");
         Env::DocAddText(RELAYER, "PubKey");
@@ -438,6 +460,10 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, Actions::VIEW))
     {
         manager::View();
+    }
+    else if (!Env::Strcmp(szAction, Actions::VIEW_PARAMS))
+    {
+        manager::ViewParams();
     }
     else if (!Env::Strcmp(szAction, Actions::SET_RELAYER))
     {
