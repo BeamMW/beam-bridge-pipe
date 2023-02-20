@@ -16,7 +16,9 @@ Deployment process using Beam dappnet as an example:
 - beam-wallet-dappnet.exe -n 127.0.0.1:10004 shader --wallet_path="d:/beam_wallets/dappnet/Admin/7.2.13309.5570/wallet.db" --shader_app_file="d:/bridge/beam-bridge-pipe/shaders/token_app.wasm" --shader_args="action=init,cid=d68cc6de5ac395ac3c5651375fce5df9201c2c4c84c211e2873c44bf428d3bdb"
 
 4. get asset id for the token contract
-- beam-wallet-dappnet.exe -n 127.0.0.1:10004   shader --wallet_path="d:/beam_wallets/dappnet/Admin/7.2.13309.5570/wallet.db" --shader_app_file="d:/bridge/beam-bridge-pipe/shaders/token_app.wasm" --shader_args="action=get_aid,cid=d68cc6de5ac395ac3c5651375fce5df9201c2c4c84c211e2873c44bf428d3bdb"
+- beam-wallet-dappnet.exe -n 127.0.0.1:10004   shader --wallet_path="d:/beam_wallets/dappnet/Admin/7.2.13309.5570/wallet.db" --shader_app_file="d:/bridge/beam-bridge-pipe/shaders/token_app.wasm" --shader_args="action=get_aid,cid=d68cc6de5ac395ac3c5651375fce5df9201c2c4c84c211e2873c44bf428d3bdb" 
+
+-> **tokenAID**=116
 
 5. deploy pipe shader
  - beam-wallet-dappnet.exe -n 127.0.0.1:10004   shader --wallet_path="d:/beam_wallets/dappnet/Admin/7.2.13309.5570/wallet.db" --shader_app_file="d:/bridge/beam-bridge-pipe/shaders/pipe_app.wasm" --shader_args="action=create,tokenCID=d68cc6de5ac395ac3c5651375fce5df9201c2c4c84c211e2873c44bf428d3bdb,tokenAID=116" --shader_contract_file="d:/bridge/beam-bridge-pipe/shaders/pipe_contract.wasm"
