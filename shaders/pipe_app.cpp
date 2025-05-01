@@ -34,6 +34,7 @@ namespace
         const char* LOCAL_MSG_COUNT = "local_msg_count";
         const char* LOCAL_MSG = "local_msg";
         const char* REMOTE_MSG = "remote_msg";
+        const char* MSG_STATUS = "msg_status";
     } // namespace Actions
 
     void OnError(const char* sz)
@@ -374,6 +375,35 @@ namespace manager
         Env::DocAddNum(RELAYER_FEE, msg.m_RelayerFee);
         Env::DocAddBlob_T(RECEIVER, msg.m_UserPK);
     }
+
+    void GetMsgStatus()
+    {
+        ContractID cid;
+        uint64_t msgId;
+        Env::DocGet(CONTRACT_ID, cid);
+        Env::DocGetNum64(MSG_ID, &msgId);
+
+        Env::Key_T<uint64_t> key;
+        key.m_Prefix.m_Cid = cid;
+        key.m_KeyInContract = msgId;
+
+        bool processed = false;
+
+        if (Env::VarReader::Read_T(key, processed))
+        {
+            if (processed)
+            {
+                Env::DocAddNum64("status", 1);
+            }
+            else
+            {
+                Env::DocAddNum64("status", 2);
+            }
+            return;
+        }
+
+        Env::DocAddNum64("status", 0);
+    }
 } // namespace manager
 
 BEAM_EXPORT void Method_0()
@@ -500,6 +530,10 @@ BEAM_EXPORT void Method_1()
     else if (!Env::Strcmp(szAction, Actions::REMOTE_MSG))
     {
         manager::GetRemoteMsg();
+    }
+    else if (!Env::Strcmp(szAction, Actions::MSG_STATUS))
+    {
+        manager::GetMsgStatus();
     }
     else
     {
